@@ -1,3 +1,7 @@
+# 2022-10-02
+
+* Dodana instrukcja obsługi terminala ANG-3001 pobrana ze strony [PTI](https://historiainformatyki.pl/dokument.php?nrar=14&nrzesp=1&sygn=XIV/1/14&handle=1368#)
+
 # 2022-07-10
 
 * Dodana instrukcja obsługi pobrana ze strony [PTI](https://historiainformatyki.pl/dokument.php?nrar=14&nrzesp=1&sygn=XIV/1/14&handle=1334)
