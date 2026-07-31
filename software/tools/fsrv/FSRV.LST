@@ -1,0 +1,636 @@
+# File fsrv.asm
+0000			; ============================================================ 
+0000			; FSRV.ASM — Bosman-8 CP/M 2.2  File Server  v1.0 
+0000			; Assembler:  z80asm -o FSRV.COM fsrv.asm 
+0000			; 
+0000			; Serwer plikow przez BIOS PUNCH / READER (lacze SIO-B, RS-232). 
+0000			; Dziala w petli az do: 
+0000			;   - nacisnecia dowolnego klawisza na konsoli (miedzy komendami), 
+0000			;   - odebrania komendy 'Q' przez lacze. 
+0000			; 
+0000			; ---- Protokol binarny (klient -> serwer) -------------------- 
+0000			; 
+0000			;   GET  'G' + nazwa\0 
+0000			;     <- 'K' + rlo + rhi + dane[ (rhi*256+rlo)*128 bajtow ] + crc8 
+0000			;     <- 'E' (blad) 
+0000			; 
+0000			;   PUT  'P' + nazwa\0 + rlo + rhi + dane + crc8 
+0000			;     -> 'K'   lub   'E' 
+0000			; 
+0000			;   DIR  'D' 
+0000			;     <- [11 bajtow: 8 nazwy + 3 ext, atrybuty wyciszone]...  + 0x00 
+0000			; 
+0000			;   QUIT 'Q' 
+0000			;     <- 'K'  (serwer konczy prace) 
+0000			; 
+0000			; CRC8 = XOR kolejnych bajtow danych. 
+0000			; Rozmiar pliku podawany w rekordach CP/M (128 B = 1 rekord). 
+0000			; 
+0000			; Adres bazy BIOS: [0x0001] - 3  (WBOOT = BIOS+3, adres z wektora). 
+0000			; Na Bosmanie-8: BIOS w RAM na 0xF200, PUNCH->0xF3EB, READER->0xF3E1. 
+0000			; ============================================================ 
+0000			 
+0000			        org     0x0100 
+0100			 
+0100			; ---- stale BDOS ---- 
+0100			BDOS:   equ     0x0005 
+0100			 
+0100			; ---- numery funkcji BDOS ---- 
+0100			F_WCHR: equ     2 
+0100			F_PSTR: equ     9 
+0100			F_OPEN: equ     15 
+0100			F_CLOS: equ     16 
+0100			F_SRCH: equ     17 
+0100			F_SNXT: equ     18 
+0100			F_DEL:  equ     19 
+0100			F_READ: equ     20 
+0100			F_WRIT: equ     21 
+0100			F_MAKE: equ     22 
+0100			F_DMA:  equ     26 
+0100			F_FSIZ: equ     35 
+0100			 
+0100			; ---- przesuniecia BIOS wzgledem bazy BIOS ---- 
+0100			B_CONST: equ    6 
+0100			B_CONIN: equ    9 
+0100			B_PUNCH: equ    18 
+0100			B_READR: equ    21 
+0100			 
+0100			; ---- inne stale ---- 
+0100			FCB_LEN: equ    36 
+0100			 
+0100			; ============================================================ 
+0100			; Punkt startowy 
+0100			; ============================================================ 
+0100			START: 
+0100 31 65 05		        ld      sp, STKTOP 
+0103			 
+0103			        ; Adres bazy BIOS = wektor WBOOT ([0x0001] 2B) - 3 
+0103 2a 01 00		        ld      hl, (0x0001) 
+0106 2b			        dec     hl 
+0107 2b			        dec     hl 
+0108 2b			        dec     hl 
+0109 22 d9 03		        ld      (BBASE), hl 
+010c			 
+010c 11 10 04		        ld      de, MBANNER 
+010f 0e 09		        ld      c, F_PSTR 
+0111 cd 05 00		        call    BDOS 
+0114			 
+0114			; ============================================================ 
+0114			; Glowna petla serwera 
+0114			; ============================================================ 
+0114			MLOOP: 
+0114 11 5a 04		        ld      de, MWAIT 
+0117 0e 09		        ld      c, F_PSTR 
+0119 cd 05 00		        call    BDOS 
+011c			 
+011c			        ; Sprawdz konsole (bez blokowania) 
+011c cd ac 03		        call    BCONST          ; A=0x00 brak / A=0xFF klawisz 
+011f b7			        or      a 
+0120 28 0a		        jr      z, MSERIAL 
+0122			 
+0122			        ; Jest klawisz — odczytaj 
+0122 cd b7 03		        call    BCONIN 
+0125 e6 df		        and     0xDF 
+0127 fe 51		        cp      'Q' 
+0129 ca 50 01		        jp      z, MEXIT 
+012c			 
+012c			MSERIAL: 
+012c			        ; Czekaj na komende przez lacze (blokuje) 
+012c cd ce 03		        call    BREADR 
+012f			 
+012f fe 47		        cp      'G' 
+0131 ca 5b 01		        jp      z, CMD_GET 
+0134 fe 50		        cp      'P' 
+0136 ca 16 02		        jp      z, CMD_PUT 
+0139 fe 44		        cp      'D' 
+013b ca d0 02		        jp      z, CMD_DIR 
+013e fe 51		        cp      'Q' 
+0140 ca 4b 01		        jp      z, CMD_QUIT 
+0143			 
+0143			        ; Nieznana komenda 
+0143 3e 45		        ld      a, 'E' 
+0145 cd c2 03		        call    BPUNCH 
+0148 c3 14 01		        jp      MLOOP 
+014b			 
+014b			; ============================================================ 
+014b			; Zakonczenie pracy serwera 
+014b			; ============================================================ 
+014b			CMD_QUIT: 
+014b 3e 4b		        ld      a, 'K' 
+014d cd c2 03		        call    BPUNCH 
+0150			MEXIT: 
+0150 11 8b 04		        ld      de, MBYE 
+0153 0e 09		        ld      c, F_PSTR 
+0155 cd 05 00		        call    BDOS 
+0158 c3 00 00		        jp      0x0000 
+015b			 
+015b			; ============================================================ 
+015b			; CMD_GET — wyslij plik do klienta 
+015b			; ============================================================ 
+015b			CMD_GET: 
+015b 11 69 04		        ld      de, MGET 
+015e 0e 09		        ld      c, F_PSTR 
+0160 cd 05 00		        call    BDOS 
+0163			 
+0163 cd 2b 03		        call    RECVFN 
+0166			 
+0166 cd 53 03		        call    BLDFCB 
+0169			 
+0169			        ; BDOS fn35: oblicz rozmiar pliku, wynik -> WFCB+33 (lo), WFCB+34 (hi) 
+0169 11 ec 03		        ld      de, WFCB 
+016c 0e 23		        ld      c, F_FSIZ 
+016e cd 05 00		        call    BDOS 
+0171 3a 0d 04		        ld      a, (WFCB + 33) 
+0174 32 db 03		        ld      (RECLO), a 
+0177 3a 0e 04		        ld      a, (WFCB + 34) 
+017a 32 dc 03		        ld      (RECHI), a 
+017d			 
+017d			        ; Przebuduj FCB (fn35 modyfikuje pola extent) 
+017d cd 53 03		        call    BLDFCB 
+0180			 
+0180			        ; Otworz plik 
+0180 11 ec 03		        ld      de, WFCB 
+0183 0e 0f		        ld      c, F_OPEN 
+0185 cd 05 00		        call    BDOS 
+0188 fe ff		        cp      0xFF 
+018a ca 06 02		        jp      z, GERR 
+018d			 
+018d			        ; Ustaw DMA -> bufor sektora 
+018d 11 a5 04		        ld      de, SBUF 
+0190 0e 1a		        ld      c, F_DMA 
+0192 cd 05 00		        call    BDOS 
+0195			 
+0195			        ; Wyslij 'K' + liczba rekordow (2B little-endian) 
+0195 3e 4b		        ld      a, 'K' 
+0197 cd c2 03		        call    BPUNCH 
+019a 3a db 03		        ld      a, (RECLO) 
+019d cd c2 03		        call    BPUNCH 
+01a0 3a dc 03		        ld      a, (RECHI) 
+01a3 cd c2 03		        call    BPUNCH 
+01a6			 
+01a6			        ; Inicjuj CRC 
+01a6 af			        xor     a 
+01a7 32 dd 03		        ld      (CRC), a 
+01aa			 
+01aa			        ; HL = liczba rekordow 
+01aa 3a db 03		        ld      a, (RECLO) 
+01ad 6f			        ld      l, a 
+01ae 3a dc 03		        ld      a, (RECHI) 
+01b1 67			        ld      h, a 
+01b2			 
+01b2			GLOOP: 
+01b2 7c			        ld      a, h 
+01b3 b5			        or      l 
+01b4 28 2d		        jr      z, GDONE 
+01b6			 
+01b6			        ; Czytaj jeden rekord 128B z dysku 
+01b6 e5			        push    hl 
+01b7 11 ec 03		        ld      de, WFCB 
+01ba 0e 14		        ld      c, F_READ 
+01bc cd 05 00		        call    BDOS 
+01bf e1			        pop     hl 
+01c0 b7			        or      a 
+01c1 c2 fc 01		        jp      nz, GERR2 
+01c4			 
+01c4			        ; Wyslij 128B przez lacze, aktualizuj CRC = CRC ^ bajt 
+01c4 e5			        push    hl 
+01c5 21 a5 04		        ld      hl, SBUF 
+01c8 06 80		        ld      b, 128 
+01ca 3a dd 03		        ld      a, (CRC) 
+01cd			GSEND: 
+01cd 5e			        ld      e, (hl) 
+01ce 23			        inc     hl 
+01cf ab			        xor     e 
+01d0 f5			        push    af 
+01d1 e5			        push    hl 
+01d2 c5			        push    bc 
+01d3 7b			        ld      a, e 
+01d4 cd c2 03		        call    BPUNCH 
+01d7 c1			        pop     bc 
+01d8 e1			        pop     hl 
+01d9 f1			        pop     af 
+01da 10 f1		        djnz    GSEND 
+01dc 32 dd 03		        ld      (CRC), a 
+01df e1			        pop     hl 
+01e0			 
+01e0 2b			        dec     hl 
+01e1 18 cf		        jr      GLOOP 
+01e3			 
+01e3			GDONE: 
+01e3			        ; Wyslij bajt CRC 
+01e3 3a dd 03		        ld      a, (CRC) 
+01e6 cd c2 03		        call    BPUNCH 
+01e9			 
+01e9			        ; Zamknij plik 
+01e9 11 ec 03		        ld      de, WFCB 
+01ec 0e 10		        ld      c, F_CLOS 
+01ee cd 05 00		        call    BDOS 
+01f1			 
+01f1 11 7d 04		        ld      de, MOK 
+01f4 0e 09		        ld      c, F_PSTR 
+01f6 cd 05 00		        call    BDOS 
+01f9 c3 14 01		        jp      MLOOP 
+01fc			 
+01fc			GERR2: 
+01fc			        ; Blad odczytu — zamknij (ignoruj blad) 
+01fc f5			        push    af 
+01fd 11 ec 03		        ld      de, WFCB 
+0200 0e 10		        ld      c, F_CLOS 
+0202 cd 05 00		        call    BDOS 
+0205 f1			        pop     af 
+0206			GERR: 
+0206 3e 45		        ld      a, 'E' 
+0208 cd c2 03		        call    BPUNCH 
+020b 11 83 04		        ld      de, MERR 
+020e 0e 09		        ld      c, F_PSTR 
+0210 cd 05 00		        call    BDOS 
+0213 c3 14 01		        jp      MLOOP 
+0216			 
+0216			; ============================================================ 
+0216			; CMD_PUT — odbierz plik od klienta 
+0216			; ============================================================ 
+0216			CMD_PUT: 
+0216 11 6f 04		        ld      de, MPUT 
+0219 0e 09		        ld      c, F_PSTR 
+021b cd 05 00		        call    BDOS 
+021e			 
+021e cd 2b 03		        call    RECVFN 
+0221			 
+0221			        ; Odbierz liczbe rekordow (2B little-endian) 
+0221 cd ce 03		        call    BREADR 
+0224 32 db 03		        ld      (RECLO), a 
+0227 cd ce 03		        call    BREADR 
+022a 32 dc 03		        ld      (RECHI), a 
+022d			 
+022d cd 53 03		        call    BLDFCB 
+0230			 
+0230			        ; Utworz plik 
+0230 11 ec 03		        ld      de, WFCB 
+0233 0e 16		        ld      c, F_MAKE 
+0235 cd 05 00		        call    BDOS 
+0238 fe ff		        cp      0xFF 
+023a ca c0 02		        jp      z, PERR 
+023d			 
+023d			        ; Ustaw DMA 
+023d 11 a5 04		        ld      de, SBUF 
+0240 0e 1a		        ld      c, F_DMA 
+0242 cd 05 00		        call    BDOS 
+0245			 
+0245			        ; Inicjuj CRC 
+0245 af			        xor     a 
+0246 32 dd 03		        ld      (CRC), a 
+0249			 
+0249			        ; HL = liczba rekordow 
+0249 3a db 03		        ld      a, (RECLO) 
+024c 6f			        ld      l, a 
+024d 3a dc 03		        ld      a, (RECHI) 
+0250 67			        ld      h, a 
+0251			 
+0251			PLOOP: 
+0251 7c			        ld      a, h 
+0252 b5			        or      l 
+0253 28 2d		        jr      z, PDONE 
+0255			 
+0255			        ; Odbierz 128B do SBUF, aktualizuj CRC 
+0255 e5			        push    hl 
+0256 21 a5 04		        ld      hl, SBUF 
+0259 06 80		        ld      b, 128 
+025b 3a dd 03		        ld      a, (CRC) 
+025e			PRECV: 
+025e f5			        push    af 
+025f e5			        push    hl 
+0260 c5			        push    bc 
+0261 cd ce 03		        call    BREADR 
+0264 5f			        ld      e, a 
+0265 c1			        pop     bc 
+0266 e1			        pop     hl 
+0267 73			        ld      (hl), e 
+0268 23			        inc     hl 
+0269 f1			        pop     af 
+026a ab			        xor     e 
+026b 10 f1		        djnz    PRECV 
+026d 32 dd 03		        ld      (CRC), a 
+0270 e1			        pop     hl 
+0271			 
+0271			        ; Zapisz rekord na dysk 
+0271 e5			        push    hl 
+0272 11 ec 03		        ld      de, WFCB 
+0275 0e 15		        ld      c, F_WRIT 
+0277 cd 05 00		        call    BDOS 
+027a e1			        pop     hl 
+027b b7			        or      a 
+027c c2 b8 02		        jp      nz, PERR2 
+027f			 
+027f 2b			        dec     hl 
+0280 18 cf		        jr      PLOOP 
+0282			 
+0282			PDONE: 
+0282			        ; Sprawdz CRC 
+0282 cd ce 03		        call    BREADR          ; odbierz CRC klienta 
+0285 47			        ld      b, a 
+0286 3a dd 03		        ld      a, (CRC) 
+0289 b8			        cp      b 
+028a c2 a5 02		        jp      nz, PCRCE 
+028d			 
+028d			        ; OK — zamknij plik 
+028d 11 ec 03		        ld      de, WFCB 
+0290 0e 10		        ld      c, F_CLOS 
+0292 cd 05 00		        call    BDOS 
+0295 3e 4b		        ld      a, 'K' 
+0297 cd c2 03		        call    BPUNCH 
+029a 11 7d 04		        ld      de, MOK 
+029d 0e 09		        ld      c, F_PSTR 
+029f cd 05 00		        call    BDOS 
+02a2 c3 14 01		        jp      MLOOP 
+02a5			 
+02a5			PCRCE: 
+02a5			        ; Blad CRC — zamknij i usun 
+02a5 11 ec 03		        ld      de, WFCB 
+02a8 0e 10		        ld      c, F_CLOS 
+02aa cd 05 00		        call    BDOS 
+02ad 11 ec 03		        ld      de, WFCB 
+02b0 0e 13		        ld      c, F_DEL 
+02b2 cd 05 00		        call    BDOS 
+02b5 c3 c0 02		        jp      PERR 
+02b8			 
+02b8			PERR2: 
+02b8			        ; Blad zapisu — zamknij 
+02b8 11 ec 03		        ld      de, WFCB 
+02bb 0e 10		        ld      c, F_CLOS 
+02bd cd 05 00		        call    BDOS 
+02c0			PERR: 
+02c0 3e 45		        ld      a, 'E' 
+02c2 cd c2 03		        call    BPUNCH 
+02c5 11 83 04		        ld      de, MERR 
+02c8 0e 09		        ld      c, F_PSTR 
+02ca cd 05 00		        call    BDOS 
+02cd c3 14 01		        jp      MLOOP 
+02d0			 
+02d0			; ============================================================ 
+02d0			; CMD_DIR — wyslij liste plikow 
+02d0			; ============================================================ 
+02d0			CMD_DIR: 
+02d0 11 77 04		        ld      de, MDIR 
+02d3 0e 09		        ld      c, F_PSTR 
+02d5 cd 05 00		        call    BDOS 
+02d8			 
+02d8 cd 95 03		        call    BLDWFCB 
+02db			 
+02db 11 a5 04		        ld      de, SBUF 
+02de 0e 1a		        ld      c, F_DMA 
+02e0 cd 05 00		        call    BDOS 
+02e3			 
+02e3 11 ec 03		        ld      de, WFCB 
+02e6 0e 11		        ld      c, F_SRCH 
+02e8 cd 05 00		        call    BDOS 
+02eb			 
+02eb			DIRNXT: 
+02eb fe ff		        cp      0xFF 
+02ed 28 2d		        jr      z, DIREND 
+02ef			 
+02ef			        ; Slot A (0..3), wpis = SBUF + A*32 + 1 (pomijamy bajt napedu) 
+02ef 6f			        ld      l, a 
+02f0 26 00		        ld      h, 0 
+02f2 29			        add     hl, hl 
+02f3 29			        add     hl, hl 
+02f4 29			        add     hl, hl 
+02f5 29			        add     hl, hl 
+02f6 29			        add     hl, hl 
+02f7 11 a6 04		        ld      de, SBUF + 1 
+02fa 19			        add     hl, de 
+02fb			 
+02fb			        ; Wyslij 11 bajtow (bity atrybutow = bit7, zerujemy) 
+02fb 06 0b		        ld      b, 11 
+02fd			DIRSND: 
+02fd 7e			        ld      a, (hl) 
+02fe e6 7f		        and     0x7F 
+0300 e5			        push    hl 
+0301 c5			        push    bc 
+0302 cd c2 03		        call    BPUNCH 
+0305 c1			        pop     bc 
+0306 e1			        pop     hl 
+0307 23			        inc     hl 
+0308 10 f3		        djnz    DIRSND 
+030a			 
+030a			        ; Szukaj nastepnego (przywroc DMA) 
+030a 11 a5 04		        ld      de, SBUF 
+030d 0e 1a		        ld      c, F_DMA 
+030f cd 05 00		        call    BDOS 
+0312 11 ec 03		        ld      de, WFCB 
+0315 0e 12		        ld      c, F_SNXT 
+0317 cd 05 00		        call    BDOS 
+031a 18 cf		        jr      DIRNXT 
+031c			 
+031c			DIREND: 
+031c			        ; Znacznik konca listy 
+031c af			        xor     a 
+031d cd c2 03		        call    BPUNCH 
+0320 11 7d 04		        ld      de, MOK 
+0323 0e 09		        ld      c, F_PSTR 
+0325 cd 05 00		        call    BDOS 
+0328 c3 14 01		        jp      MLOOP 
+032b			 
+032b			; ============================================================ 
+032b			; RECVFN — odbierz nazwe pliku (null-terminated) ze lacza 
+032b			;   Wynik: FNBUF = nazwa, drukuje na konsoli 
+032b			; ============================================================ 
+032b			RECVFN: 
+032b 21 de 03		        ld      hl, FNBUF 
+032e 06 0d		        ld      b, 13           ; max 12 znakow + terminator 
+0330			RFLOOP: 
+0330 cd ce 03		        call    BREADR 
+0333 77			        ld      (hl), a 
+0334 23			        inc     hl 
+0335 b7			        or      a 
+0336 28 0a		        jr      z, RFDONE 
+0338 10 f6		        djnz    RFLOOP 
+033a			        ; Wymus null-terminator przy za dlugiej nazwie 
+033a af			        xor     a 
+033b 77			        ld      (hl), a 
+033c			RFDRAIN: 
+033c cd ce 03		        call    BREADR 
+033f b7			        or      a 
+0340 20 fa		        jr      nz, RFDRAIN 
+0342			RFDONE: 
+0342			        ; Drukuj nazwe na konsoli (znak po znaku) 
+0342 21 de 03		        ld      hl, FNBUF 
+0345			RFPRT: 
+0345 7e			        ld      a, (hl) 
+0346 b7			        or      a 
+0347 c8			        ret     z 
+0348 5f			        ld      e, a 
+0349 0e 02		        ld      c, F_WCHR 
+034b e5			        push    hl 
+034c cd 05 00		        call    BDOS 
+034f e1			        pop     hl 
+0350 23			        inc     hl 
+0351 18 f2		        jr      RFPRT 
+0353			 
+0353			; ============================================================ 
+0353			; BLDFCB — zbuduj FCB z FNBUF (format "NAZWA.EXT\0") 
+0353			; ============================================================ 
+0353			BLDFCB: 
+0353			        ; Wyzeruj FCB 
+0353 21 ec 03		        ld      hl, WFCB 
+0356 06 24		        ld      b, FCB_LEN 
+0358 af			        xor     a 
+0359			BFCLR: 
+0359 77			        ld      (hl), a 
+035a 23			        inc     hl 
+035b 10 fc		        djnz    BFCLR 
+035d			 
+035d			        ; Wypelnij pola nazwy+ext spacjami 
+035d 21 ed 03		        ld      hl, WFCB + 1 
+0360 06 0b		        ld      b, 11 
+0362 3e 20		        ld      a, ' ' 
+0364			BFFIL: 
+0364 77			        ld      (hl), a 
+0365 23			        inc     hl 
+0366 10 fc		        djnz    BFFIL 
+0368			 
+0368			        ; Kopiuj nazwe (max 8 zn, az do '.' lub \0) 
+0368 11 de 03		        ld      de, FNBUF 
+036b 21 ed 03		        ld      hl, WFCB + 1 
+036e 06 08		        ld      b, 8 
+0370			BFNAM: 
+0370 1a			        ld      a, (de) 
+0371 b7			        or      a 
+0372 c8			        ret     z 
+0373 fe 2e		        cp      '.' 
+0375 28 0f		        jr      z, BFDOT 
+0377 77			        ld      (hl), a 
+0378 23			        inc     hl 
+0379 13			        inc     de 
+037a 10 f4		        djnz    BFNAM 
+037c			        ; Za dluga nazwa — pomijaj az do '.' lub \0 
+037c			BFSKIP: 
+037c 1a			        ld      a, (de) 
+037d 13			        inc     de 
+037e b7			        or      a 
+037f c8			        ret     z 
+0380 fe 2e		        cp      '.' 
+0382 20 f8		        jr      nz, BFSKIP 
+0384 18 01		        jr      BFEXT 
+0386			BFDOT: 
+0386 13			        inc     de 
+0387			BFEXT: 
+0387			        ; Kopiuj rozszerzenie (max 3 zn) 
+0387 21 f5 03		        ld      hl, WFCB + 9 
+038a 06 03		        ld      b, 3 
+038c			BFEXL: 
+038c 1a			        ld      a, (de) 
+038d b7			        or      a 
+038e c8			        ret     z 
+038f 77			        ld      (hl), a 
+0390 23			        inc     hl 
+0391 13			        inc     de 
+0392 10 f8		        djnz    BFEXL 
+0394 c9			        ret 
+0395			 
+0395			; ============================================================ 
+0395			; BLDWFCB — FCB z wildcardami '????????.???' 
+0395			; ============================================================ 
+0395			BLDWFCB: 
+0395 21 ec 03		        ld      hl, WFCB 
+0398 06 24		        ld      b, FCB_LEN 
+039a af			        xor     a 
+039b			BWCLR: 
+039b 77			        ld      (hl), a 
+039c 23			        inc     hl 
+039d 10 fc		        djnz    BWCLR 
+039f 21 ed 03		        ld      hl, WFCB + 1 
+03a2 06 0b		        ld      b, 11 
+03a4 3e 3f		        ld      a, '?' 
+03a6			BWFIL: 
+03a6 77			        ld      (hl), a 
+03a7 23			        inc     hl 
+03a8 10 fc		        djnz    BWFIL 
+03aa c9			        ret 
+03ab			 
+03ab			; ============================================================ 
+03ab			; Wywolania BIOS przez tablice wektorow w RAM 
+03ab			; 
+03ab			; Technika: CALL BJMP z HL = adres funkcji BIOS. 
+03ab			;   CALL BJMP: odkłada adres powrotu, skacze do BJMP. 
+03ab			;   BJMP: JP (HL) -> skacze do BIOS bez modyfikacji stosu. 
+03ab			;   BIOS: RET -> wraca do miejsca za CALL BJMP. 
+03ab			; ============================================================ 
+03ab			BJMP: 
+03ab e9			        jp      (hl) 
+03ac			 
+03ac			BCONST: 
+03ac 2a d9 03		        ld      hl, (BBASE) 
+03af 11 06 00		        ld      de, B_CONST 
+03b2 19			        add     hl, de 
+03b3 cd ab 03		        call    BJMP 
+03b6 c9			        ret 
+03b7			 
+03b7			BCONIN: 
+03b7 2a d9 03		        ld      hl, (BBASE) 
+03ba 11 09 00		        ld      de, B_CONIN 
+03bd 19			        add     hl, de 
+03be cd ab 03		        call    BJMP 
+03c1 c9			        ret 
+03c2			 
+03c2			BPUNCH: 
+03c2			        ; BIOS PUNCH oczekuje bajtu w rejestrze C 
+03c2 4f			        ld      c, a 
+03c3 2a d9 03		        ld      hl, (BBASE) 
+03c6 11 12 00		        ld      de, B_PUNCH 
+03c9 19			        add     hl, de 
+03ca cd ab 03		        call    BJMP 
+03cd c9			        ret 
+03ce			 
+03ce			BREADR: 
+03ce 2a d9 03		        ld      hl, (BBASE) 
+03d1 11 15 00		        ld      de, B_READR 
+03d4 19			        add     hl, de 
+03d5 cd ab 03		        call    BJMP 
+03d8 c9			        ret 
+03d9			 
+03d9			; ============================================================ 
+03d9			; Zmienne 
+03d9			; ============================================================ 
+03d9 00 00		BBASE:  defw    0x0000 
+03db 00			RECLO:  defb    0x00 
+03dc 00			RECHI:  defb    0x00 
+03dd 00			CRC:    defb    0x00 
+03de			 
+03de 0x00...		FNBUF:  defs    14, 0x00 
+03ec			 
+03ec 0x00...		WFCB:   defs    FCB_LEN, 0x00 
+0410			 
+0410			; ============================================================ 
+0410			; Napisy (zakonczone '$' dla BDOS fn 9) 
+0410			; ============================================================ 
+0410			MBANNER: 
+0410 ..			        defb    "\r\nCP/M File Server v1.0\r\n" 
+0429 ..			        defb    "Lokalnie: Q = wyjscie\r\n" 
+0440 ..			        defb    "Czekam na polaczenie...\r\n$" 
+045a			MWAIT: 
+045a ..			        defb    "\r\n< czekam >\r\n$" 
+0469			MGET: 
+0469 ..			        defb    "GET: $" 
+046f			MPUT: 
+046f ..			        defb    "\r\nPUT: $" 
+0477			MDIR: 
+0477 ..			        defb    "DIR\r\n$" 
+047d			MOK: 
+047d ..			        defb    " OK\r\n$" 
+0483			MERR: 
+0483 ..			        defb    " BLAD\r\n$" 
+048b			MBYE: 
+048b ..			        defb    "\r\nKoniec pracy serwera.\r\n$" 
+04a5			 
+04a5			; ============================================================ 
+04a5			; Bufor sektora (128 bajtow = 1 rekord CP/M) 
+04a5			; ============================================================ 
+04a5 0x00...		SBUF:   defs    128, 0x00 
+0525			 
+0525			; ============================================================ 
+0525			; Stos (~64 bajty, ~16 poziomow wywolan) 
+0525			; ============================================================ 
+0525 0x00...		        defs    64, 0x00 
+0565			STKTOP: equ     $ 
+# End of file fsrv.asm
+0565

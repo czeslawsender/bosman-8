@@ -1,0 +1,563 @@
+#!/usr/bin/env python3
+"""PC client for the Bosman-8 CP/M FSRV.COM file server."""
+
+from __future__ import annotations
+
+import argparse
+import math
+import os
+import sys
+import time
+from pathlib import Path
+from typing import Protocol
+
+RECORD_SIZE = 128
+DEFAULT_BAUD = 9600
+BAUD_RATES = {
+    1: 9600,
+    2: 19200,
+    3: 38400,
+    4: 57600,
+    5: 115200,
+}
+BAUD_PRESETS = {f"-{level}": rate for level, rate in BAUD_RATES.items()}
+DEFAULT_STOPBITS = 2
+DEFAULT_TIMEOUT = 10.0
+DEFAULT_MASK = "*.*"
+DEFAULT_COLD_DEST = "A:FSRV"
+DEFAULT_COLD_CHUNK = 16
+
+
+class SerialLike(Protocol):
+    def read(self, size: int = 1) -> bytes: ...
+    def write(self, data: bytes) -> int | None: ...
+    def close(self) -> None: ...
+
+
+def crc_xor(data: bytes) -> int:
+    crc = 0
+    for byte in data:
+        crc ^= byte
+    return crc & 0xFF
+
+
+def strip_cpm_eof(data: bytes) -> bytes:
+    return data.rstrip(b"\x1A")
+
+
+def pad_cpm_records(data: bytes) -> tuple[int, bytes]:
+    records = math.ceil(len(data) / RECORD_SIZE) if data else 0
+    return records, data.ljust(records * RECORD_SIZE, b"\x1A")
+
+
+def normalize_cpm_name(name: str, *, allow_wildcards: bool = False) -> str:
+    value = name.strip().upper()
+    if not value:
+        raise ValueError("empty CP/M name")
+
+    drive = ""
+    body = value
+    if len(value) >= 2 and value[1] == ":":
+        if value[0] < "A" or value[0] > "P":
+            raise ValueError(f"invalid CP/M drive: {value[:2]}")
+        drive = value[:2]
+        body = value[2:]
+        if not body:
+            raise ValueError("missing CP/M file name after drive")
+
+    if "/" in body or "\\" in body or ":" in body:
+        raise ValueError(f"invalid CP/M name: {name!r}")
+    if not allow_wildcards and ("*" in body or "?" in body):
+        raise ValueError(f"wildcards are not valid for this command: {name!r}")
+
+    parts = body.split(".")
+    if len(parts) > 2:
+        raise ValueError(f"invalid CP/M 8.3 name: {name!r}")
+    stem = parts[0]
+    ext = parts[1] if len(parts) == 2 else ""
+
+    if not stem:
+        raise ValueError(f"missing CP/M file name: {name!r}")
+    if len(stem) > 8 or len(ext) > 3:
+        raise ValueError(f"CP/M name is longer than 8.3: {name!r}")
+
+    allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$~!#%&'()-@^`{}"
+    wildcard = "*?" if allow_wildcards else ""
+    for char in stem + ext:
+        if char not in allowed + wildcard:
+            raise ValueError(f"invalid CP/M character {char!r} in {name!r}")
+
+    return drive + stem + (f".{ext}" if ext else "")
+
+
+def local_name_for_get(cpm_name: str) -> Path:
+    normalized = normalize_cpm_name(cpm_name)
+    return Path(normalized.split(":", 1)[-1])
+
+
+def recv_exact(port: SerialLike, size: int, *, progress: bool = False) -> bytes:
+    buf = bytearray()
+    total = size
+    while len(buf) < size:
+        chunk = port.read(size - len(buf))
+        if not chunk:
+            raise TimeoutError(f"timeout while waiting for {size} bytes; got {len(buf)}")
+        buf.extend(chunk)
+        if progress and total >= 1024 and len(buf) % 1024 < len(chunk):
+            print(f"\r  receiving {len(buf)}/{total} bytes...", end="", flush=True, file=sys.stderr)
+    if progress and total >= 1024:
+        print(f"\r  received {len(buf)}/{total} bytes   ", file=sys.stderr)
+    return bytes(buf)
+
+
+def recv_byte(port: SerialLike) -> int:
+    return recv_exact(port, 1)[0]
+
+
+def send_bytes(port: SerialLike, data: bytes) -> None:
+    port.write(data)
+
+
+def send_name(port: SerialLike, name: str, *, allow_wildcards: bool = False) -> str:
+    normalized = normalize_cpm_name(name, allow_wildcards=allow_wildcards)
+    send_bytes(port, normalized.encode("ascii") + b"\x00")
+    return normalized
+
+
+def expect_ok(port: SerialLike) -> None:
+    response = recv_byte(port)
+    if response == ord("E"):
+        raise RuntimeError("server returned error")
+    if response != ord("K"):
+        raise RuntimeError(f"unexpected server response: 0x{response:02X}")
+
+
+def get_file(port: SerialLike, cpm_name: str) -> bytes:
+    send_bytes(port, b"G")
+    send_name(port, cpm_name)
+
+    response = recv_byte(port)
+    if response == ord("E"):
+        raise RuntimeError("server returned error for GET")
+    if response != ord("K"):
+        raise RuntimeError(f"unexpected GET response: 0x{response:02X}")
+
+    records = recv_byte(port) | (recv_byte(port) << 8)
+    print(f"GET {cpm_name}: {records} records ({records * RECORD_SIZE} bytes)", file=sys.stderr)
+
+    data = bytearray()
+    for rec in range(records):
+        rec_data = recv_exact(port, RECORD_SIZE)
+        server_crc = recv_byte(port)
+        local_crc = crc_xor(rec_data)
+        if server_crc != local_crc:
+            send_bytes(port, b"E")
+            raise RuntimeError(
+                f"CRC mismatch on record {rec}: server={server_crc:02X} local={local_crc:02X}"
+            )
+        data.extend(rec_data)
+        send_bytes(port, b"K")  # per-record ACK
+
+    recv_byte(port)  # final K from server (file closed)
+    return strip_cpm_eof(bytes(data))
+
+
+def put_file(port: SerialLike, local_data: bytes, cpm_name: str) -> int:
+    records, padded = pad_cpm_records(local_data)
+    if records > 0xFFFF:
+        raise ValueError("file is too large for the FSRV protocol")
+
+    send_bytes(port, b"P")
+    send_name(port, cpm_name)
+    send_bytes(port, bytes([records & 0xFF, records >> 8]))
+    print(f"PUT {cpm_name}: {records} records ({records * RECORD_SIZE} bytes)", file=sys.stderr)
+
+    expect_ok(port)  # initial ACK: server created file, ready for records
+
+    for rec in range(records):
+        offset = rec * RECORD_SIZE
+        rec_data = padded[offset : offset + RECORD_SIZE]
+        rec_crc = crc_xor(rec_data)
+
+        send_bytes(port, rec_data)
+        send_bytes(port, bytes([rec_crc]))
+
+        expect_ok(port)  # per-record ACK
+
+    expect_ok(port)  # final ACK: file closed OK
+    print(f"PUT {cpm_name}: done, {records} records", file=sys.stderr)
+    return records
+
+
+def decode_dir_entry(raw: bytes) -> str:
+    if len(raw) != 11:
+        raise ValueError("directory entry must be exactly 11 bytes")
+    clean = bytes(byte & 0x7F for byte in raw)
+    stem = clean[:8].decode("ascii", errors="replace").rstrip()
+    ext = clean[8:].decode("ascii", errors="replace").rstrip()
+    return f"{stem}.{ext}" if ext else stem
+
+
+def dir_files(port: SerialLike, mask: str = DEFAULT_MASK) -> list[str]:
+    normalized = normalize_cpm_name(mask, allow_wildcards=True)
+
+    send_bytes(port, b"D")
+    send_bytes(port, normalized.encode("ascii") + b"\x00")
+
+    entries: list[str] = []
+    while True:
+        raw = recv_exact(port, 11)
+        if raw == b"\x00" * 11:
+            return sorted(entries)
+        entries.append(decode_dir_entry(raw))
+
+
+def quit_server(port: SerialLike) -> None:
+    send_bytes(port, b"Q")
+    expect_ok(port)
+
+
+def set_speed(port: SerialLike, level: int) -> int:
+    baud = BAUD_RATES[level]
+    send_bytes(port, b"S" + bytes([level]))
+    expect_ok(port)
+    setattr(port, "baudrate", baud)
+    return baud
+
+
+def intel_hex_record(address: int, data: bytes, record_type: int = 0) -> str:
+    if address < 0 or address > 0xFFFF:
+        raise ValueError(f"Intel HEX address out of range: 0x{address:X}")
+    if len(data) > 0xFF:
+        raise ValueError("Intel HEX record is too long")
+    fields = bytes([len(data), (address >> 8) & 0xFF, address & 0xFF, record_type]) + data
+    checksum = (-sum(fields)) & 0xFF
+    return ":" + fields.hex().upper() + f"{checksum:02X}"
+
+
+def com_to_intel_hex(data: bytes, *, origin: int = 0x0100, chunk_size: int = DEFAULT_COLD_CHUNK) -> str:
+    lines = []
+    for offset in range(0, len(data), chunk_size):
+        lines.append(intel_hex_record(origin + offset, data[offset : offset + chunk_size]))
+    lines.append(intel_hex_record(0, b"", 1))
+    return "\r\n".join(lines) + "\r\n"
+
+
+def parse_cold_destination(value: str) -> tuple[str, str]:
+    normalized = normalize_cpm_name(value if "." in value else f"{value}.HEX")
+    if ":" in normalized:
+        drive, name = normalized.split(":", 1)
+    else:
+        drive, name = "A", normalized
+    stem = name.split(".", 1)[0]
+    return drive[0], stem
+
+
+def send_cold_boot(
+    port: SerialLike,
+    com_data: bytes,
+    *,
+    line_delay: float = 0.02,
+    char_delay: float = 0.0,
+) -> int:
+    payload = com_to_intel_hex(com_data).encode("ascii") + b"\x1A"
+    sent = 0
+
+    if char_delay > 0:
+        for byte in payload:
+            send_bytes(port, bytes([byte]))
+            sent += 1
+            time.sleep(char_delay)
+    else:
+        for line in payload.splitlines(keepends=True):
+            send_bytes(port, line)
+            sent += len(line)
+            if line_delay > 0:
+                time.sleep(line_delay)
+
+    flush = getattr(port, "flush", None)
+    if flush is not None:
+        flush()
+    return sent
+
+
+def open_serial(args: argparse.Namespace) -> SerialLike:
+    try:
+        import serial
+    except ImportError as exc:
+        raise SystemExit("pyserial is required: pip install pyserial") from exc
+
+    stopbits = serial.STOPBITS_TWO if args.stopbits == 2 else serial.STOPBITS_ONE
+    return serial.Serial(
+        args.port,
+        baudrate=args.baud,
+        bytesize=serial.EIGHTBITS,
+        parity=serial.PARITY_NONE,
+        stopbits=stopbits,
+        timeout=args.timeout,
+    )
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Client for Bosman-8 CP/M FSRV.COM")
+    parser.add_argument(
+        "-p",
+        "--port",
+        default=os.environ.get("FSRV_PORT", "/dev/ttyS0"),
+        help="serial port (default: $FSRV_PORT or /dev/ttyS0)",
+    )
+    parser.add_argument(
+        "-b",
+        "--baud",
+        default=int(os.environ.get("FSRV_BAUD", DEFAULT_BAUD)),
+        type=int,
+        help="baud rate (default: $FSRV_BAUD or 9600)",
+    )
+    for flag, baud in sorted(BAUD_PRESETS.items()):
+        parser.add_argument(flag, dest="baud", action="store_const", const=baud, help=f"set baud to {baud}")
+    parser.add_argument(
+        "--stopbits",
+        default=DEFAULT_STOPBITS,
+        type=int,
+        choices=[1, 2],
+        help="serial stop bits (default: 2)",
+    )
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        default=DEFAULT_TIMEOUT,
+        type=float,
+        help="serial timeout in seconds",
+    )
+    parser.add_argument(
+        "--cold",
+        action="store_true",
+        help="bootstrap FSRV.COM through CP/M PIP RDR: as Intel HEX",
+    )
+    parser.add_argument(
+        "--cold-file",
+        default=str(Path(__file__).with_name("FSRV.COM")),
+        help="local COM image to send in cold mode",
+    )
+    parser.add_argument(
+        "--cold-dest",
+        default=DEFAULT_COLD_DEST,
+        help="CP/M destination base name for cold mode (default: A:FSRV)",
+    )
+    parser.add_argument(
+        "--cold-line-delay",
+        default=0.02,
+        type=float,
+        help="delay between Intel HEX lines in cold mode",
+    )
+    parser.add_argument(
+        "--cold-char-delay",
+        default=0.0,
+        type=float,
+        help="optional per-character delay in cold mode",
+    )
+
+    sub = parser.add_subparsers(dest="command")
+
+    dir_parser = sub.add_parser("dir", help="list CP/M files")
+    dir_parser.add_argument("mask", nargs="?", default=DEFAULT_MASK, help="CP/M mask, e.g. B:*.COM")
+
+    get_parser = sub.add_parser("get", help="copy a file from CP/M")
+    get_parser.add_argument("cpm_name", help="CP/M source name, e.g. A:PIP.COM")
+    get_parser.add_argument("local_path", nargs="?", help="local destination path")
+
+    put_parser = sub.add_parser("put", help="copy a file to CP/M")
+    put_parser.add_argument("local_path", help="local source path")
+    put_parser.add_argument("cpm_name", help="CP/M destination name, e.g. A:TEST.COM")
+
+    speed_parser = sub.add_parser("speed", help="set server baud rate")
+    speed_parser.add_argument(
+        "level",
+        type=int,
+        choices=sorted(BAUD_RATES),
+        help="1=9600, 2=19200, 3=38400, 4=57600, 5=115200",
+    )
+
+    sub.add_parser("quit", help="stop the CP/M server")
+
+    send_parser = sub.add_parser("send", help="send a file over serial (raw, no FSRV protocol)")
+    send_parser.add_argument("file", help="local file to send")
+    send_parser.add_argument("--hex", action="store_true", help="encode to Intel HEX before sending")
+    send_parser.add_argument("--baud", type=int, default=None, dest="send_baud", help="baud rate for this transfer")
+    send_parser.add_argument("--org", default="0x0100", help="origin address for HEX mode (default: 0x0100)")
+    send_parser.add_argument("--eot", action="store_true", help="append ^Z (0x1A) as CP/M EOF marker (always on for --hex)")
+    return parser
+
+
+def run_cold_boot(args: argparse.Namespace) -> int:
+    try:
+        drive, stem = parse_cold_destination(args.cold_dest)
+        com_data = Path(args.cold_file).read_bytes()
+    except (OSError, ValueError) as exc:
+        print(f"fsrv: {exc}", file=sys.stderr)
+        return 1
+
+    print("Cold boot transfer uses CP/M PIP to receive Intel HEX over RDR:.")
+    print()
+    print("On the CP/M machine, type:")
+    print(f"  PIP {drive}:{stem}.HEX=RDR:")
+    print()
+    print("When PIP is waiting for input from the reader device, press Enter here.")
+    print("This client will send Intel HEX and finish with Ctrl-Z.")
+    print()
+    print("After transfer completes on CP/M, type:")
+    print(f"  LOAD {stem}")
+    print(f"  {stem}")
+    print()
+
+    try:
+        input("Ready to send? Press Enter, or Ctrl-C to abort. ")
+    except KeyboardInterrupt:
+        print()
+        return 130
+
+    try:
+        port = open_serial(args)
+    except Exception as exc:
+        print(f"fsrv: failed to open serial port: {exc}", file=sys.stderr)
+        return 2
+
+    try:
+        sent = send_cold_boot(
+            port,
+            com_data,
+            line_delay=args.cold_line_delay,
+            char_delay=args.cold_char_delay,
+        )
+    except (OSError, ValueError) as exc:
+        print(f"fsrv: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        port.close()
+
+    print(f"Sent {sent} bytes of Intel HEX from {args.cold_file}.")
+    return 0
+
+
+def run_send(args: argparse.Namespace) -> int:
+    """Send a file over serial — Intel HEX or raw binary, ends with ^Z for CP/M PIP RDR:."""
+    try:
+        file_data = Path(args.file).read_bytes()
+    except OSError as exc:
+        print(f"fsrv: {exc}", file=sys.stderr)
+        return 1
+
+    baud = args.send_baud if args.send_baud else args.baud
+
+    try:
+        import serial
+    except ImportError as exc:
+        raise SystemExit("pyserial is required: pip install pyserial") from exc
+
+    stopbits = serial.STOPBITS_TWO if args.stopbits == 2 else serial.STOPBITS_ONE
+
+    try:
+        port = serial.Serial(
+            args.port,
+            baudrate=baud,
+            bytesize=serial.EIGHTBITS,
+            parity=serial.PARITY_NONE,
+            stopbits=stopbits,
+            timeout=args.timeout,
+        )
+    except Exception as exc:
+        print(f"fsrv: failed to open serial port: {exc}", file=sys.stderr)
+        return 2
+
+    append_eot = args.eot or args.hex  # hex always needs ^Z for PIP RDR:
+
+    try:
+        if args.hex:
+            origin = int(args.org, 16) if args.org.startswith("0x") else int(args.org)
+            payload = com_to_intel_hex(file_data, origin=origin).encode("ascii")
+            print(f"Sending {args.file} ({len(file_data)} B) as Intel HEX "
+                  f"→ {args.port} @ {baud} 8N{args.stopbits}")
+        else:
+            payload = file_data
+            if append_eot and b"\x1A" in payload:
+                print("Warning: file contains 0x1A (^Z) bytes — PIP RDR: will stop early. Use --hex.",
+                      file=sys.stderr)
+            print(f"Sending {args.file} ({len(file_data)} B) raw "
+                  f"→ {args.port} @ {baud} 8N{args.stopbits}")
+
+        if append_eot:
+            payload += b"\x1A"
+
+        # send with progress for large payloads
+        total = len(payload)
+        chunk = 256
+        for offset in range(0, total, chunk):
+            port.write(payload[offset:offset + chunk])
+            if total >= 1024:
+                sent = min(offset + chunk, total)
+                print(f"\r  sending {sent}/{total} bytes...", end="", flush=True, file=sys.stderr)
+        if total >= 1024:
+            print(f"\r  sent {total}/{total} bytes   ", file=sys.stderr)
+        flush = getattr(port, "flush", None)
+        if flush is not None:
+            flush()
+        print(f"Sent {total} bytes.")
+    except OSError as exc:
+        print(f"fsrv: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        port.close()
+
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    if args.cold:
+        if args.command is not None:
+            parser.error("--cold cannot be combined with dir/get/put/speed/quit/send")
+        return run_cold_boot(args)
+    if args.command == "send":
+        return run_send(args)
+    if args.command is None:
+        parser.error("one of {dir,get,put,send,speed,quit} is required unless --cold is used")
+
+    try:
+        port = open_serial(args)
+    except Exception as exc:
+        print(f"fsrv: failed to open serial port: {exc}", file=sys.stderr)
+        return 2
+
+    try:
+        if args.command == "dir":
+            for entry in dir_files(port, args.mask):
+                print(entry)
+        elif args.command == "get":
+            local_path = Path(args.local_path) if args.local_path else local_name_for_get(args.cpm_name)
+            data = get_file(port, args.cpm_name)
+            local_path.write_bytes(data)
+            print(f"{local_path}: {len(data)} bytes")
+        elif args.command == "put":
+            local_path = Path(args.local_path)
+            data = local_path.read_bytes()
+            records = put_file(port, data, args.cpm_name)
+            print(f"{normalize_cpm_name(args.cpm_name)}: {records} records")
+        elif args.command == "speed":
+            baud = set_speed(port, args.level)
+            print(f"speed {args.level}: {baud} baud")
+        elif args.command == "quit":
+            quit_server(port)
+            print("server stopped")
+    except (OSError, RuntimeError, TimeoutError, ValueError) as exc:
+        print(f"fsrv: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        port.close()
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
