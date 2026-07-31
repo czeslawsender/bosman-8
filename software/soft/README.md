@@ -3,8 +3,7 @@
 ## Wstęp
 
 To repozytorium zawiera oprogramowanie dla **polskiego mikrokomputera BOSMAN-8**
-(procesor Z80, system operacyjny CP/M 2.2), odzyskane z oryginalnych dyskietek
-użytkownika z Gdyni.
+(procesor Z80, system operacyjny CP/M 2.2).
 
 **Łącznie: 878 plików, ~14 MB danych, 64 dyskietki (strony a i b).**
 
