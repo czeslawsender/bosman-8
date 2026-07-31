@@ -1,0 +1,5 @@
+cc $1.c
+c2 $1.cod
+era $1.cod
+m80 =$1.asm
+era $1.asm

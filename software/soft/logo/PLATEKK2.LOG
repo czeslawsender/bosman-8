@@ -1,0 +1,22 @@
+oto pìatek_1 :stopieî :rozmiar
+cs pod
+przyp "skala 1 - (pwk 2) / 2
+ws :rozmiar * (pwk 3) / 6
+pw 90 ws :rozmiar / 2
+lw 60 opu
+powtïrz 3 [bok_1 :stopieî :rozmiar pw 120]
+juû
+oto bok_1 :stopieî :rozmiar
+jeóli :stopieî = 0 [np :rozmiar stop]
+bok_1 :stopieî - 1 :rozmiar * :skala
+lw 45
+bok_1 :stopieî - 1 :rozmiar * :skala
+pw 90
+bok_1 :stopieî - 1 :rozmiar * :skala
+lw 45
+bok_1 :stopieî - 1 :rozmiar * :skala
+juû
+przypisz "skala 0.292893218813452
+u
+lw 90 powtïrz 25 [np 8 pod np 2 opu] np 5
+pod 

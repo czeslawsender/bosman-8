@@ -1,0 +1,175 @@
+;-------------------------------------------------
+;Procedura programowania slowa pamieci
+;dane: adres slowa prog. w HL, wpisuje
+;do portu B: adres, do portu C: 10001aaa
+;dane: slowo progr. w D, wpisuje do portu A
+	ORG 06000H
+PRBYT:	NOP		
+MPRAD:	NOP		;adres slowa programowanego
+	XOR A 		;separator
+	OUT (098H),A
+	CALL TOUT
+	LD A,03H	;zapis do rej. B
+	OUT (098H),A
+	CALL TOUT
+	LD A,L		;mlodszy bajt adresu
+	OUT (098H),A
+	CALL TOUT
+	LD A,05H	;zapis do rej. C
+	OUT (098H),A
+	CALL TOUT
+	LD A,H		;starsze bity adresu
+	AND 07H
+	OR 088H		;10001aaa do portu C
+	OUT (098H),A	;bit 0 slowa prog; blok.prog.
+	CALL TOUT
+MPRSD:	NOP		; wart. slowa programowanego
+	XOR A 		;separator 0
+	OUT (098H),A
+	CALL TOUT
+	LD A,01H	;zapis do rej. A
+	OUT (098H),A
+	CALL TOUT
+	LD A,D		;Wart. slowa programowanego
+	OUT (098H),A
+	CALL TOUT
+	;poczatek programowania slowa
+LBIT:	XOR A 		;wybor kolejnego bitu w slowie: 
+	OUT (098H),A	;l. bitow do konca slowa w B
+	CALL TOUT
+	LD A,07H	;zaczyna od ust. bitu LSB = b0
+	OUT (098H),A	;zapis do rej. steruj.
+	CALL TOUT
+	LD A,8		;zmiana bitu c4 = b0
+	SUB B		;obliczony i
+	LD E,A		;zapamietany aktualny nr bitu
+	AND 01H
+	ADD A,08H
+	OUT (098H),A
+	CALL TOUT
+	XOR A 
+	OUT (098H),A
+	CALL TOUT
+	LD A,07H	;zapis do rej. steruj.
+	OUT (098H),A
+	CALL TOUT
+	LD A,E		;zmiana bitu c5 = b1
+	AND 02H
+	SRL A
+	ADD A,0AH
+	OUT (098H),A
+	CALL TOUT
+	XOR A 
+	OUT (098H),A
+	CALL TOUT
+	LD A,07H	;zapis do rej. steruj.
+	OUT (098H),A
+	CALL TOUT
+	LD A,E		;zmiana bitu c6 = b2
+	AND 04H
+	SRL A
+	SRL A
+	ADD A,0CH
+	OUT (098H),A	;tu nr progr. bitu gotowy
+	CALL TOUT
+	XOR A 		;start programowania bitu
+	OUT (098H),A	;impuls "0" na wy. portu c7
+	CALL TOUT
+	LD A,07H	;zapis do rej. steruj.
+	OUT (098H),A
+	CALL TOUT
+	LD A,0EH	;c7=0
+	OUT (098H),A
+	CALL TOUT
+	XOR A 
+	OUT (098H),A
+	CALL TOUT
+	LD A,07H	;zapis do rej. steruj.
+	OUT (098H),A
+	CALL TOUT
+	LD A,0FH	;c7=1
+	OUT (098H),A
+	CALL TOUT
+LBUSY:	IN A,(098H)	;odczyt stanu BUSY (d7)
+	AND 080H	;czeka az BUSY : 1 -> 0
+	RLA		;test d7 (BUSY)
+	JR C,LBUSY	;petla gdy d7=1
+	DJNZ LBIT	;petla zmiany nr. bitu 
+	NOP		;koniec gdy B=0
+	RET
+;
+;-------------------------------------------------
+;procedura odczytu zaprogramowanego slowa
+;adres slowa w HL, wartosc slowa zwracana w D
+;numer biezacego bitu w B
+	ORG 06100H
+MPRRD:	NOP
+	LD B,8		;8 bitow w slowie
+	LD D,0		;tu bedzie wynik
+	XOR A 
+	OUT (098H),A
+	CALL TOUT
+	LD A,05H	;zapis do portu C
+	OUT (098H),A
+	CALL TOUT
+	LD A,H		;starsze bity adresu
+	AND 07H		;maska
+	OR 088H		;wart. pocz. portu C
+	OUT (098H),A
+	CALL TOUT
+LBRD:	XOR A 		;petla odczytu bitu
+	OUT (098H),A
+	CALL TOUT
+	LD A,07H	;zapis do rej. ster.
+	OUT (098H),A
+	CALL TOUT
+	LD A,8
+	SUB B		;numer biezacego bitu
+	LD E,A
+	AND 01H		;wartosc LSB
+	ADD A,08H	;wartosc c4
+	OUT (098H),A
+	CALL TOUT
+	XOR A 
+	OUT (098H),A
+	CALL TOUT
+	LD A,07H	;zapis do r. ster.
+	OUT (098H),A
+	CALL TOUT
+	LD A,E
+	SRL A
+	LD E,A
+	AND 01H		;wartosc NLSB
+	ADD A,0AH	;wartosc c5
+	OUT (098H),A
+	CALL TOUT
+	XOR A 
+	OUT (098H),A
+	CALL TOUT
+	LD A,07H	;zapis do r. ster.
+	OUT (098H),A
+	CALL TOUT
+	LD A,E
+	AND 01H		;wart. MSB nru bitu
+	ADD A,0CH	;wartosc c6
+	OUT (098H),A
+	CALL TOUT
+	LD E,0		;poczatek odczytu bitu j
+	IN A,(098H)	;odczyt stanu DPOUT (b4)
+	AND 010H	;maska b4
+	JR Z,ZERO
+	LD E,1		;jezeli b4 = 1
+ZERO:	LD A,D
+	SLA A
+	ADD A,E		;wpis b4 jako LSB
+	LD D,A
+	JR NZ,LBRD	;koniec petli odczytu bitu 
+	LD A,D		;wynik w akumulatorze
+	RET
+;test wyjscia CENTRONICS - BUSY
+TOUT:	IN A,(098H)	;test BUSY=b7
+	RLA
+	JR NC,TOUT	;wyjscie gdy BUSY=0
+	RET
+	END
+	END 06000H

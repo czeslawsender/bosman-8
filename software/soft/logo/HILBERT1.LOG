@@ -1,0 +1,40 @@
+oto Hilbert :n
+sû cs
+ustaw :n
+a :n
+juû
+oto ustaw :n
+kát 0
+przypisz "kratka kratka :n
+pod poz [80 80] lw 90
+np :kratka / 2 lw 90
+np :kratka / 2 opu
+pw 90 * reszta :n 2
+juû
+oto a :n
+jeóli :n = 0 [stop]
+jeóli (reszta :n 2) = 0 
+     [b :n - 1 l n a :n - 1 p n p a :n - 1 n l b :n - 1 stop]
+b :n - 1 n l a :n - 1 n a :n - 1 l n b :n - 1
+juû
+oto b :n
+jeóli :n = 0 [stop]
+jeóli (reszta :n 2) = 0 
+    [a :n - 1 p n b :n - 1 l n l b :n - 1 n p a :n - 1 stop]
+a :n - 1 n p b :n - 1 n b :n - 1 p n a :n - 1
+juû
+oto kratka :n
+jeóli :n = 0 [wy 160]
+wy 0.5 * kratka :n - 1
+juû
+oto p
+pw 90
+juû
+oto l
+lw 90
+juû
+oto n
+np :kratka
+juû
+przypisz "kratka 10
+`!¡`$¡Sc'¡Üc6¡d>¡>dD¡JdP¡^d]¡el¡’dz¡nd‰¡ûd–¡¦q¢¡”qª¡¬q¶¡šq¼¡Z`Ä¡„`Ô¡¦`âÈÑ`ñ¡Ç`÷¡Bfÿ¡§f

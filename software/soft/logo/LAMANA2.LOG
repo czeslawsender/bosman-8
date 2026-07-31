@@ -1,0 +1,28 @@
+oto rysuj_ìamaná_2 :stopieî :rozmiar
+przypisz "alfa arctg 0.25
+przypisz "skala 0.25 * cos :alfa
+cs pod
+poz zd -:rozmiar / 2 -:rozmiar / 2
+opu lw :stopieî * :alfa
+powtïrz 4 [bok_2 :stopieî :rozmiar pw 90]
+juû
+oto bok_2 :stopieî :rozmiar
+jeóli :stopieî = 0 [np :rozmiar stop]
+bok_2 :stopieî - 1 :rozmiar * :skala
+pw 90
+bok_2 :stopieî - 1 :rozmiar * :skala
+lw 90
+bok_2 :stopieî - 1 :rozmiar * :skala
+lw 90
+bok_2 :stopieî - 1 :rozmiar * :skala
+pw 90
+bok_2 :stopieî - 1 :rozmiar * :skala
+pw 90
+bok_2 :stopieî - 1 :rozmiar * :skala
+lw 90
+bok_2 :stopieî - 1 :rozmiar * :skala
+juû
+przypisz "alfa 14.0362434679265
+przypisz "skala 0.242535625036333
+§^¡_¡
+`¡`!¡`$¡Sc'¡Üc6¡d>¡>dD¡JdP¡^d]¡el¡’dz¡nd‰¡ûd–¡¦q¢¡”qª¡¬q¶¡      :rozmiar / 4 ¡Ç`÷¡Bfÿ¡§f

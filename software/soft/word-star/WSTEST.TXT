@@ -1,0 +1,79 @@
+           Test drukarki
+
+PQ - Wyk|adnik-wyk|adnik
+
+PW - Indeks-indeks
+
+PE - wy|`czenie
+
+PS - podkre^lenie
+
+PD - pogrubienie
+
+PB - mocne pogrubienie
+
+PY - Du}e litery-w|`czenie i wy|`czenie
+
+PW PE - Ma|e litery - ma|e litery
+
+PR - zero przekre^lone: 0
+                        0
+
+PA - alfabet z ROM-a
+
+PT PT - dodatkowe znaki
+
+SP ! " # $ % & ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; < = > ? @
+   " # $ % & ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; < = > ? @
+
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ `
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ `
+
+a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~
+a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~
+
+PN - alfabet z RAMu (polski)
+
+.paŠBiblioteka WordStar'a:
+
+KR SUM.LIB                              KR INTEG.LIB   
+               L                                       
+               d xi                         tl        
+               i=1                           : x dx    
+                                             u0        
+
+
+KR BRACKETS.LIB                        KR ABS.LIB
+
+V    7                                 :   :
+:    :                                 :   :
+:    :                                 :   :
+:    :                                 :   : 
+:    :
+T    <
+
+KR BOX.LIB                KR VLINE.LIB      KR HLINE.LIB     
+                                                             
+VDDDDDDDDRDDDDDDDD7       :                 DDDDDDDDDDDDDDDD 
+:        :        :       :            
+:  Tekst :        :       :            
+GDDDDDDDDXDDDDDDDD4       :            
+:        :        :       :            
+TDDDDDDDDPDDDDDDDD<       :            
+                          :            
+                          :
+                          :
+
+
+KR FBOX.LIB               KR FVLINE.LIB     KR FHLINE.LIB
+[________[                [                 ________     
+[        [                [            
+[  Tekst [                [            
+[        [                [            
+[\\\\\\\\[                [            
+                          [            
+                          [            
+                          [            
+                                       
+
+Koniec testu drukarki

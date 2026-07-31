@@ -1,0 +1,21 @@
+oto start :n
+de
+cs pod poz [-120 0] pw 90
+opu
+kolia :n 240
+juû
+oto kolia :n :dì_boku
+jeóli :n = 0 [np :dì_boku stop]
+kolia :n - 1 :dì_boku / 3
+lw 60
+powtïrz 2 [kolia :n - 1 :dì_boku / 3 pw 120]
+lw 60
+powtïrz 2 [kolia :n - 1 :dì_boku / 3 pw 120]
+pod np :dì_boku / 3 opu
+kolia :n - 1 :dì_boku / 3
+juû
+skala
+pw 90
+bok_2 :stopieî - 1 :rozmiar * :skala
+lw 90
+bok_2 :st

@@ -1,0 +1,33 @@
+oto k_sierp :n
+ustaw :n
+powtïrz 4 [bok :n pw 45 np :maìy_krok pw 45]
+juû
+oto ustaw :n
+sû cs przypisz "kratka kratka :n
+przypisz "maìy_krok :kratka * pwk 2
+przypisz "duûy_krok 2 * :kratka
+hop 87 - :kratka :duûy_krok - 88
+pw 90
+juû
+oto bok :n
+jeóli :n = 0 [stop]
+bok :n - 1
+pw 45 np :maìy_krok pw 45
+bok :n - 1
+lw 90 np :duûy_krok lw 90
+bok :n - 1
+pw 45 np :maìy_krok pw 45
+bok :n - 1
+juû
+oto hop :a :b
+pod np :a pw 90
+np :b lw 90 opu
+juû
+oto kratka :n
+jeóli :n = 0 [wy 42]
+wy 0.5 * kratka :n - 1
+juû
+przypisz "kratka 42
+przypisz "duûy_krok 84
+przypisz "maìy_krok 59.39696961967
+Z¬ ùZ´ U» †[Â ¥[È Ù[Ì )\Ô ^\

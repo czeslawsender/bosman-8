@@ -1,0 +1,59 @@
+oto drgania.x.t :m
+wejócie
+ruch
+juû
+oto wejócie
+zaleûnoóci
+warunki.poczátkowe
+juû
+oto ruch
+wyjócie
+upìyw.czasu
+wychylenie
+przyspieszenie
+naståpna.prådkoóã
+ruch
+juû
+oto zaleûnoóci
+przypisz "k 1
+przypisz "b :k / :m
+przypisz "delta.t 0.1
+przypisz "w pwk :b
+juû
+oto warunki.poczátkowe
+przypisz "t 0
+przypisz "x 1
+przypisz "v 0
+przypisz "A :x
+przypisz "xt :x
+juû
+oto przyspieszenie
+przypisz "a -:b * :x
+juû
+oto naståpna.prådkoóã
+przypisz "v :v + :a * :delta.t
+juû
+oto wyjócie
+wpisz [t\=] wpisz :t wpisz "s pisz "
+wpisz [x\=] wpisz :x * 100 wpisz "cm wpisz [\ \ \ ] wpisz [xt\=]
+wpisz :xt wpisz "cm pisz " wpisz [rïûnica\=] wpisz (100 * :xt - 
+      100 * :x) / :xt wpisz "% pisz " pisz "
+juû
+oto upìyw.czasu
+przypisz "t :t + :delta.t
+juû
+oto wychylenie
+przypisz "x :x + :v * :delta.t
+przypisz "xt :A * cos (180 * :w * :t / pi)
+juû
+przypisz "xt -0.973140114983687
+przypisz "delta.t 0.1
+przypisz "x -0.969529431050564
+przypisz "w 0.316227766016838
+przypisz "v -0.0824670256352351
+przypisz "t 9.20000000000012
+przypisz "k 1
+przypisz "b 0.1
+przypisz "a 0.0961282728487041
+przypisz "A 1
+my¤çh~¤ÿh‚¤mx\=

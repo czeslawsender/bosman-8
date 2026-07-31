@@ -1,0 +1,22 @@
+oto rysuj_dywan :stopieî :rozmiar
+sû cs pod poz [-80 -80]
+pw 30 opu
+dywan :stopieî :rozmiar
+juû
+oto dywan :stopieî :rozmiar
+jeóli :stopieî = 0 [trïjkát :rozmiar stop]
+powtïrz 3 [dywan :stopieî - 1 :rozmiar / 2 np :rozmiar pw 120]
+zamaluj_órodek :rozmiar
+juû
+oto trïjkát :dì_boku
+powtïrz 3 [np :dì_boku pw 120]
+juû
+oto zamaluj_órodek :rozmiar
+pod pw 30 np :rozmiar / 2
+ws :rozmiar / 2 lw 30 opu
+juû
+ramion :skala 
+        pw :kát]
+juû
+oto ustaw :kát :bok
+pod lw 90 np :bok / (2 * sin :kát / 

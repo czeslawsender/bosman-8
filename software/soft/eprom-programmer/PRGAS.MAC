@@ -1,0 +1,179 @@
+;procedura ustawia war. poczatk. pracy programatora
+;bez parametrow
+;ustawia slowo progr.=0, adres=0, blok.programowania
+PRINI:	NOP
+	XOR A 		;separator 0
+	OUT (098H),A
+	LD A,07H	;zapis do rej. ster.
+	OUT (098H),A
+	LD A,080H	;tryb 0, wszystkie porty WY
+	OUT (098H),A
+	XOR A 		;separator 0
+	OUT (098H),A
+	LD A,01H	;zapis do portu A
+	OUT (098H),A
+	XOR A 		;wartosc pocz. 0 do portu A
+	OUT (098H),A
+	OUT (098H),A	;separator
+	LD A,03H	;zapis do portu B
+	OUT (098H),A
+	XOR A 		;wartosc pocz. 0 do portu B
+ 	OUT (098H),A
+	OUT (098H),A	;separator
+	LD A,05H	;zapis do portu C
+	OUT (098H),A
+	LD A,088H	;wartosc pocz. dla portu C
+	OUT (098H),A
+	RET
+;
+;procedura ustawia wart. slowa programowanego
+;dane: slowo progr. w D, wpisuje do portu A
+MPRSD:	NOP
+	XOR A 		;separator 0
+	OUT (098H),A
+	LD A,01H	;zapis do rej. A
+	OUT (098H),A
+	LD A,D		;Wart. slowa programowanego
+	OUT (098H),A
+	RET
+;
+;procedura ustawia adres slowa programowanego
+;dane: adres slowa prog. w HL
+;po zakoncz. bit  0 slowa prog. i war pocz.:blok.prog.
+;w porcie B: adres, w porcie C: 10001aaa
+MPRAD:	NOP
+	XOR A 		;separator
+	OUT (098H),A
+	LD A,03H	;zapis do rej. B
+	OUT (098H),A
+	LD A,L		;mlodszy bajt adresu
+	OUT (098H),A
+	LD A,05H	;zapis do rej. C
+	OUT (098H),A
+	LD A,H		;starsze bity adresu 
+	AND 07H
+	OR 088H		;10001aaa do portu C
+	OUT (098H),A
+	RET
+;
+;procedura wyboru kolejnego bitu w slowie program.
+;liczba bitow do konca slowa w B
+;zaczyna od ustawienia bitu LSB = b0
+;ustawia wart. bitow portu C : c6,c5,c4
+PRBIT:	NOP
+LBIT:	XOR A 
+	OUT (098H),A
+	LD A,07H	;zapis do rej. steruj.
+	OUT (098H),A
+	LD A,8		;zmiana bitu c4 = b0
+	SUB B		;obliczony i
+	LD E,A		;zapamietany aktualny nr bitu
+	AND 01H
+	ADD A,08H
+	OUT (098H),A
+	XOR A 
+	OUT (098H),A
+	LD A,07H	;zapis do rej. steruj.
+	OUT (098H),A
+	LD A,E		;zmiana bitu c5 = b1
+	AND 02H
+	SRL A
+	ADD A,0AH
+	OUT (098H),A
+	XOR A 
+	OUT (098H),A
+	LD A,07H	;zapis do rej. steruj.
+	OUT (098H),A
+	LD A,E		;zmiana bitu c6 = b2
+	AND 04H
+	SRL A
+	SRL A
+	ADD A,0CH
+	OUT (098H),A	;tu nr progr. bitu gotowy
+	XOR A 		;start programowania bitu
+	OUT (098H),A	;impuls "0" na wy. portu c7
+	LD A,07H	;zapis do rej. steruj.
+	OUT (098H),A
+	LD A,0EH	;c7=0
+	OUT (098H),A
+	XOR A 
+	OUT (098H),A
+	LD A,07H	;zapis do rej. steruj.
+	OUT (098H),A
+	LD A,0FH	;c7=1
+	OUT (098H),A
+LBUSY:	IN A,(098H)	;odczyt stanu BUSY (d7)
+	AND 080H	;czeka az BUSY : 1 -> 0
+	RLA		;test d7 (BUSY)
+	JR C,LBUSY	;petla gdy d7=1
+	DJNZ LBIT	;petla zmiany nr. bitu 
+	RET		;koniec gdy B=0
+;
+;procedura odczytu zaprogramowanego slowa
+;adres slowa w HL, wartosc slowa zwracana w D
+;numer biezacego bitu w B
+MPRRD:	NOP
+	LD B,8		;8 bitow w slowie
+	LD D,0		;tu bedzie wynik
+	XOR A 
+	OUT (098H),A
+	LD A,05H	;zapis do portu C
+	OUT (098H),A
+	LD A,H		;starsze bity adresu
+	AND 07H		;maska
+	OR 088H		;wart. pocz. portu C
+	OUT (098H),A
+LBRD:	XOR A 		;petla odczytu bitu
+	OUT (098H),A
+	LD A,07H	;zapis do rej. ster.
+	OUT (098H),A
+	LD A,8
+	SUB B		;numer biezacego bitu
+	LD E,A
+	AND 01H		;wartosc LSB
+	ADD A,08H	;wartosc c4
+	OUT (098H),A
+	XOR A 
+	OUT (098H),A
+	LD A,07H	;zapis do r. ster.
+	OUT (098H),A
+	LD A,E
+	SRL A
+	LD E,A
+	AND 01H		;wartosc NLSB
+	ADD A,0AH	;wartosc c5
+	OUT (098H),A
+	XOR A 
+	OUT (098H),A
+	LD A,07H	;zapis do r. ster.
+	OUT (098H),A
+	LD A,E
+	AND 01H		;wart. MSB nru bitu
+	ADD A,0CH	;wartosc c6
+	OUT (098H),A
+	LD E,0		;poczatek odczytu bitu j
+	IN A,(098H)	;odczyt stanu DPOUT (b4)
+	AND 010H	;maska b4
+	JR Z,ZERO
+	LD E,1		;jezeli b4 = 1
+ZERO:	LD A,D
+	SLA A
+	ADD A,E		;wpis b4 jako LSB
+	LD D,A
+	DJNZ LBRD	;koniec petli odczytu bitu 
+	RET
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	END 0

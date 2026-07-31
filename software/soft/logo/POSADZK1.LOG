@@ -1,0 +1,23 @@
+oto posadzka :stopieî :rozmiar
+sû cs
+powtïrz 4 [kafelek :stopieî :rozmiar pw 90]
+juû
+oto kafelek :stopieî :rozmiar
+powtïrz 4 [bok_1 :stopieî :rozmiar pw 90]
+juû
+oto bok_1 :stopieî :rozmiar
+jeóli :stopieî = 0 [np :rozmiar stop]
+bok_1 :stopieî - 1 :rozmiar / 4 lw 90
+bok_1 :stopieî - 1 :rozmiar / 4 pw 90
+bok_1 :stopieî - 1 :rozmiar / 4 pw 90
+bok_1 :stopieî - 1 :rozmiar / 4
+bok_1 :stopieî - 1 :rozmiar / 4 lw 90
+bok_1 :stopieî - 1 :rozmiar / 4 lw 90
+bok_1 :stopieî - 1 :rozmiar / 4 pw 90
+bok_1 :stopieî - 1 :rozmiar / 4
+juû
+w 60
+bok :n - 1 :dboku / 3
+juû
+ "krok 17.4311485495316
+  Z§ Z¬ ùZ´ U» †[Â ¥[È Ù[Ì )\Ô ^\Ø

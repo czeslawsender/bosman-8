@@ -1,0 +1,18 @@
+oto Peano :stopieî :dì_boku_kwadratu
+sû cs pod
+poz zd -:dì_boku_kwadratu / 2 -:dì_boku_kwadratu / 2
+opu pw 45
+krzywa_Peano :stopieî :dì_boku_kwadratu * pwk 2
+juû
+oto krzywa_Peano :stopieî :bok
+jeóli :stopieî = 0 [np :bok stop]
+krzywa_Peano :stopieî - 1 :bok / 3
+lw 90
+powtïrz 3 [krzywa_Peano :stopieî - 1 :bok / 3 pw 90]
+powtïrz 3 [krzywa_Peano :stopieî - 1 :bok / 3 lw 90]
+krzywa_Peano :stopieî - 1 :bok / 3
+pw 90
+krzywa_Peano :stopieî - 1 :bok / 3
+juû
+3 :i lw 60 * :i
+gaj_l :st - 1 :bok / 3 -

@@ -1,0 +1,8 @@
+era $1.rel
+cc1 $1.c
+cc2 -extextrn $1.cod $2
+era $1.cod
+m80 =$1.asm
+era $1.asm
+l80 c2pre,$1,libc/s,c2post,$1/y/n/e
+era $1.rel

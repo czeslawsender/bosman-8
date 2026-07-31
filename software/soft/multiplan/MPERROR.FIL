@@ -1,0 +1,52 @@
+Value is either too large or too small. Re-enter.             
+"Use cursor keys to position cursor (UP,DOWN,RIGHT,LEFT,CAN) "
+Improper filename. Examples: S82BUDG, B:ACTUAL, VERS12        
+"Expecting a number. You entered non-numeric characters."     
+Choose any command and enter the command number like 111<CR>  
+Cannot use FIX on this command.  Please see manual.           
+"Attempt to delete program steps when there is no program."   
+"Too many steps in a program. You can have 100 steps."        
+No program steps in memory.                                   
+"Press any cursor key to recover your display.             "  
+"This report may be too wide for the normal width printer "   
+"There is no file on this diskette with this name."           
+"The content of this file is incorrect. (e.g. old version?)"  
+"Hit RETURN to see the available tables or programs          "
+cancelled.                                                    
+"No more tables/programs on this drive."                      
+"This report is too wide to print. Maximum width is 254 cols" 
+"Use cursor keys to select a row  (UP, DOWN, CANCEL)"         
+"Use cursor keys to select a column  (RIGHT,LEFT,CANCEL)"     
+"Current table does not have enough columns for DEPR/LOAN."   
+"Improper method. Use SET DEPR to enter proper values."       
+"W-22 Sum of cashflows is less than 0. IRR is negative."      
+"W-23 Interest rate is 0. Use SET LOAN to enter LOAN inputs." 
+"W-24 Use SET LOAN to enter proper inputs for LOAN command."  
+"W-25 Cashflows have no change in signs. No solution for IRR."
+"W-26 Cashflows have more than one change in sign. CAUTION."  
+"W-27 Life value less than 1. Cannot compute loan/depr."      
+"Improper tax schedule. Use SET SCHED to enter schedule."     
+"New table is smaller than current table dimensions. Enlarge?"
+Program steps in memory have been cleared.                    
+"Formula is too complex. Symbol table is full."               
+Cannot use the SET DEPR/LOAN/SCHED or DO TAX commands in cols.
+"IRR: Can only handle 50 values. "                            
+This add-on option is not available in your copy of MicroPlan.
+Cannot load different size tables in a program.               
+The table has different dimensions from current. Changing size
+Program mode on. Command has been saved. Please SAVE PGM.     
+Cannot load row and column titles from different size tables. 
+"null command."                                               
+Your program already exists.  Continue with save?             
+"saved."                                                      
+"Syntax Error."                                               
+Your file already exists.  Continue with save?                
+OK to erase current data?                                     
+OK to erase current program?                                  
+No help files.                                                
+SET PAPER; HIT RETURN.                                        
+hit RETURN; to continue.                                      
+IRR:  Divergence.  Cannot get solution after 50 trials.       
+W-50 Write error - is disk full?                              
+W-51 null                                                     
+W-52 null                                                     

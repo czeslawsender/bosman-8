@@ -1,0 +1,22 @@
+oto rys :stopieî :bok :ile_wierzchoìkïw :co_ktïry :skala
+sû cs gr
+ustaw :co_ktïry * 360 / :ile_wierzchoìkïw :bok
+gwiazdki :stopieî :bok :co_ktïry * 360 / :ile_wierzchoìkïw 
+         :ile_wierzchoìkïw / nwd :ile_wierzchoìkïw :co_ktïry :skala
+juû
+oto gwiazdki :stopieî :bok :kát :ile_ramion :skala
+jeóli :stopieî = 0 [stop]
+powtïrz :ile_ramion [np :bok 
+        gwiazdki :stopieî - 1 :bok * :skala :kát :ile_ramion :skala 
+        pw :kát]
+juû
+oto ustaw :kát :bok
+pod lw 90 np :bok / (2 * sin :kát / 2)
+pw 90 opu
+juû
+oto nwd :liczba_1 :liczba_2
+jeóli (reszta :liczba_1 :liczba_2) = 0 [wy :liczba_2]
+wy nwd :liczba_2 reszta :liczba_1 :liczba_2
+juû
+^¡_¡
+`¡`!¡`$¡kolce :st - 1 bok * 0.4775 pw 1co_ktïry * 360 / :ile_wierzchoìkïw :bokñ3Ç`÷¡B3ÿu§f

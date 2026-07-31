@@ -1,0 +1,51 @@
+oto tor
+sû cs
+wejócie
+ruch
+juû
+oto wejócie
+zaleûnoóci
+osie
+warunki.poczátkowe
+juû
+oto ruch
+jeóli :t > 200 [stop]
+ster
+upìyw.czasu
+wektor.r
+ruch
+juû
+oto zaleûnoóci
+przypisz "delta.t 1
+przypisz "skala 80
+juû
+oto osie
+pod wrïã opu
+np 87 ws 175 np 88 lw 90 np 127
+ws 254 np 127 pw 90
+juû
+oto warunki.poczátkowe
+przypisz "t 0
+okno pod
+wektor.r
+opu
+juû
+oto upìyw.czasu
+przypisz "t :t + :delta.t
+juû
+oto wektor.r
+poz zd poìoûenie.x poìoûenie.y
+juû
+oto poìoûenie.x
+wynik :skala * cos :t
+juû
+oto poìoûenie.y
+wynik :skala * cos (2 * :t)
+juû
+oto ster
+jeóli :t > 200 [pisz [koniec obliczeî .......naciónij ESC]]
+juû
+przypisz "delta.t 1
+przypisz "t 201
+przypisz "skala 80
+el¡’dz¡nd‰¡ûd–¡¦q¢¡”qª¡¬q¶¡jeóli :t > 200 [wpisz [kon²ec o

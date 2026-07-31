@@ -1,0 +1,69 @@
+oto koìo
+powtïrz 180 [np 2 pw 2]
+juû
+oto rïûa
+powtïrz 4 [powtïrz 30 [np 3 pw 3] pw 180]
+juû
+oto rrr
+powtïrz 24 [pw 15 rïûa]
+juû
+oto wykres
+ukìad
+pod
+przyp "x -130
+przes opu
+powtïrz 83 [przes]
+juû
+oto przes
+przyp "y 2.5e-04 * :x * :x * :x + 4.e-03 * :x * :x - 3 * :x + 20.2
+kát azymut lista :x :y
+poz lista :x :y
+przyp "x :x + 3
+juû
+oto ukìad
+cs gr sû
+pw 90 powtïrz 25 [np 8 pod np 2 opu] np 5
+pw 150 np 5 pw 120 np 5 pw 120 np 5
+pod wrïã opu
+lw 90 powtïrz 25 [np 8 pod np 2 opu] np 5
+pod wrïã opu
+np 165 pw 150 np 5 pw 120 np 5 pw 120 np 5
+pod wrïã opu
+pw 180 np 115
+pod wrïã opu
+przyp "z -100
+ócieranie powtïrz 26 [pkt lista 0 :z przyp "z :z + 10] opu
+sss 47 13 50
+sss 55 13 100
+sss 63 13 150
+sss 72 13 200
+sss 30 13 -50
+sss 21 13 -100
+sss 13 13 -150
+sss 4 13 -200
+sss 36 7 50
+sss 35 3 100
+sss 35 14 -50
+sss 34 18 -100
+juû
+oto sss :x :y :z
+kursor lista :x :y
+pisz :z kursor [0 23]
+juû
+wykres de
+pisz [wykres funkcji y=0.00025 * x * x * x + 0.004 * x * x - 3 * x + 20.2]
+czekaj 500
+ts
+po "wykres
+po "przes
+czekaj 800
+gr
+czekaj 400
+cs rrr
+pû np 150 pw 90 np 100 pw 180 np 200 pod wrïã opu
+czekaj 400
+ìadujo "rozeta
+pod wrïã np 140 opu powtïrz 100 [pw 45 czekaj 5]
+cs ìadujo "przekroj
+czekaj 400
+cs ìadujo "test

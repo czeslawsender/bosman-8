@@ -1,0 +1,67 @@
+oto spad.v.t :m
+wejócie
+ruch
+juû
+oto wejócie
+zaleûnoóci
+osie
+warunki.poczátkowe
+juû
+oto ruch
+jeóli (i :oó.t > -127 :oó.t < 127 :oó.v < 87 :oó.v > -88) 
+ [wyjócie] [vmax stop]
+przyspieszenie
+upìyw.czasu
+naståpna.prådkoóã
+ruch
+juû
+oto zaleûnoóci
+przypisz "g 9.81
+przypisz "k 0.2
+przypisz "b :k / :m
+przypisz "delta.t 0.5
+przypisz "skala.t 20
+przypisz "skala.v 2
+juû
+oto osie
+sklej
+pod wrïã opu
+lw 90 np 638 pw 90 np 340
+sû
+juû
+oto przyspieszenie
+przypisz "a :g - :b * :v * :v
+juû
+oto upìyw.czasu
+przypisz "t :t + :delta.t
+przypisz "oó.t :t * :skala.t - 126
+juû
+oto naståpna.prådkoóã
+przypisz "v :v + :a * :delta.t
+przypisz "oó.v :v * :skala.v
+juû
+oto wyjócie
+pkt lista :oó.t :oó.v
+juû
+oto vmax
+kursor [2 0]
+pisz pwk (:g / :b)
+juû
+oto warunki.poczátkowe
+przypisz "t 0
+przypisz "v 0
+przypisz "oó.t :t * :skala.t - 126
+przypisz "oó.v :v * :skala.v
+juû
+przypisz "skala.v 2
+przypisz "skala.t 20
+przypisz "delta.t 0.5
+przypisz "v 46.110121128612
+przypisz "t 5.5
+przypisz "k 0.2
+przypisz "g 9.81
+przypisz "b 0.002
+przypisz "a 6.10180760666905
+przypisz "oó.v 92.220242257224
+przypisz "oó.t -16
+¤

@@ -1,0 +1,32 @@
+oto rysuj_krzywá :stopieî :rozmiar
+przypisz "alfa arctg (pwk 3) / 5
+przypisz "wsp (pwk 7) / 7
+sû cs pod pw 90
+poz zd -1 * :rozmiar / 2 -30
+pw :stopieî * :alfa
+opu
+sp :stopieî :rozmiar
+juû
+oto sp :n :bok
+jeóli :n = 0 [np :bok stop]
+sp :n - 1 :bok * :wsp lw 60
+sl :n - 1 :bok * :wsp lw 120
+sl :n - 1 :bok * :wsp pw 60
+sp :n - 1 :bok * :wsp pw 120
+sp :n - 1 :bok * :wsp
+sp :n - 1 :bok * :wsp pw 60
+sl :n - 1 :bok * :wsp lw 60
+juû
+oto sl :n :bok
+jeóli :n = 0 [np :bok stop]
+pw 60 sp :n - 1 :bok * :wsp
+lw 60 sl :n - 1 :bok * :wsp
+sl :n - 1 :bok * :wsp lw 120
+sl :n - 1 :bok * :wsp lw 60
+sp :n - 1 :bok * :wsp pw 120
+sp :n - 1 :bok * :wsp pw 60
+sl :n - 1 :bok * :wsp
+juû
+przypisz "alfa 19.1066053508691
+przypisz "wsp 0.377964473009227
+Bfÿ¡wf

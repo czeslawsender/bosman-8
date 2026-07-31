@@ -1,0 +1,458 @@
+
+                                                              
+MicroPlan is a financial planning worksheet.  MicroPlan allows
+you to do row and column calculations electronically.         
+                                                              
+Most of the screen displays your table.  The commands on the  
+right allow you to write titles and data into the table.  You 
+choose a command by typing the command number followed by the 
+carriage return key.                                          
+                                                              
+Some  commands  are not listed on the command menu.  They are:
+                                                              
+     1. Backspacing: Use the DEL key.                         
+     2. Cancellation: Use the ESCAPE key.                     
+     3. Cursor movement: Use the arrow keys.                  
+                                                              
+     4. Function keys: Use any function key for commands or   
+           any alpha key for calculation commands.            
+ 1 format:                                                    
+Display format commands. Enter row & column titles, set row or
+column print options, look at options and move rows or columns
+ 2 data:                                                      
+Display data entry commands. Enter data, move the data pointer
+fix, nullify and goto commands.                               
+ 3 math:                                                      
+Display math commands. Arithmetic, cumulate, negate, get,     
+ceiling, floor, and row and column summations.                
+ 4 finance:                                                   
+Display finance commands. Depreciaion, mortgages, internal    
+rate of return, ratios, percentages, growth and tax schedules.
+ 5 print:                                                     
+Display print commands. Set report options, titles and print  
+reports. Reports can be sent to disk files.                   
+ 6 status:                                                    
+Display status commands. Range settings, mode selection, and  
+selection of compute order.                                   
+ 7 HELP       command                                         
+Explains each command. Describes the commands and explains    
+usage.                                                        
+ 9 STOP       verify                                          
+Clears the display and exits to CP/M. The current table is not
+automatically saved.                                          
+10 utility:                                                   
+Display utility commands. Save/load tables, re-dimension table
+size, select drive, reset and redisplay screen.               
+11 program:                                                   
+Display program commands. Save, load, clear, print, list and  
+erase programs.                                               
+12 stats:  (This section is an add on module)                 
+Display statistical commands. Smoothing, moving averages, mean
+variance, standard deviations and curve fitting.              
+13 tables: (This section is an add on module)                 
+Display external table access commands. Consolidations,       
+variance analysis, and commands to link tables or to G/L.     
+14 link:   (This section is an add on module)                 
+Display external data access commands. DIF interface, link to 
+G/L or data management files, Posting and Tabulation.         
+16 format:                                                    
+Display format commands. Enter row & column titles, set row or
+column print options, look at options and move row or columns.
+17 INSERT                                                     
+Insert a row or column at the current data pointer position.  
+(Insert really gets an empty row/col from the end of the tbl) 
+18 DELETE   <verify>                                          
+Delete a row or column at the current data pointer position.  
+(Delete really moves row/col to the end of the table)         
+19  rows:                                                     
+Row section of format commands.                               
+                                                              
+20 ROW TITLE  title ... ESCAPE     (DOWN, UP, ESCAPE)         
+Enter or change row titles. Each title entered is placed in   
+the current row. The cursor keys move the current row pointer.
+21 SET TYPE   row  option ... ESCAPE                          
+Allows you to specify the type of row, underlining, decimal   
+places, spacing and special formatting for each row.          
+22 SHOW ROWS                                                  
+Display the current options for each row. Also shows the      
+commands stored for each row.                                 
+23 REORDER    old-row  new-row                                
+Move old-row into the position new-row. Use this command to   
+insert new rows or delete rows from your table.               
+24  cols:                                                     
+Column section of format commands.                            
+                                                              
+25 COL TITLE  title1 title2 ... ESC  (RIGHT, LEFT, ESCAPE)    
+Enter or change col titles. Each title entered is placed in   
+the current col. The cursor keys move the current col pointer.
+26 SET TYPE   column  option ... ESCAPE                       
+Allows you to specify the column width, decimal places and    
+special column formatting for each column.                    
+27 SHOW COLS                                                  
+Display the current options for each column. Also shows the   
+commands stored for each column.                              
+28 REORDER    old-column  new-column                          
+Move old-column into the position new-column. Use this command
+to insert new columns or delete columns from your table.      
+29 data:                                                      
+Display data entry commands. Enter data, move the data pointer
+fix, nullify and goto commands.                               
+30 ENTRY      value ... ESC  (UP, DOWN, RIGHT, LEFT, ESCAPE)  
+Enter values into table.  Cursor keys allow movement to any   
+cell in the current table range settings.                     
+31 ENTER      value ... ESC  (UP, DOWN, RIGHT, LEFT, ESCAPE)  
+Enter values into table. Constant, grow and increase options  
+allow quick entry. Cursor keys allow individual data entry.   
+32 CHANGE     row, column <-- value                           
+Change one value in your table.                               
+                                                              
+33 SELECT ROW row                                             
+Move the data pointer to a new row of the table. Also, use the
+up and down cursor keys to move the data pointer.             
+34 SELECT COL column                                          
+Move the data pointer to a new column of the table. Also, use 
+the right and left cursor keys to move the data pointer.      
+35 FORMULA    RESULT <-- formula                              
+Use a formula. Formulas may reference a row or column (Ln),   
+values (Vr,c) or positive constants in the formula.           
+36 GOTO       row  column                                     
+Position the display screen with row,column in the upper left 
+corner of your terminal.                                      
+37 PLUG       row, column <-- formula                         
+Use a formula to calculate results for a particular cell. The 
+formula may reference table values (Vr,c) or constants.       
+38 FIX                                                        
+Re-computes the current row or column. Use cursor keys to move
+the data pointer to the right row or column before using FIX. 
+39 NULLIFY    row/col                                         
+Nullify command associated with a row or column. The data in  
+the table is not affected.                                    
+40  math:                                                     
+Display math commands. Arithmetic, cumulate, negate, get,     
+floor, ceiling and row and column summations.                 
+41 ADD        RESULT <-- row/col1 + row/col2                  
+Add  two rows or columns of values.                           
+                                                              
+42 SUBTRACT   RESULT <-- row/col1 - row/col2                  
+Sutract  the second row/col from the first row/col.           
+                                                              
+43 MULTIPLY   RESULT <-- row/col1 * row/col2                  
+Multiply two rows or columns of values.                       
+                                                              
+44 DIVIDE     RESULT <-- row/col1 / row/col2                  
+Divide  the first row/col by the second row/col.              
+                                                              
+45 NEGATE     RESULT <-- - (row/col)                          
+Negate  a row or column of values.                            
+                                                              
+46 INVERSE    RESULT <-- 1 / (row/col)                        
+Compute the inverse for a row or column of values.            
+                                                              
+47 INTEGER    RESULT <-- INT(row/col)                         
+Compute the integer part of a row or column of values by      
+dropping the fractional portion of a number.                  
+48 ROUND      RESULT <-- INT(row/col + 0.5)                   
+Round a row or column of values to the nearest whole number.  
+                                                              
+49 CUMULATE   RESULT(t) <-- RESULT(t-1) + row/col(t)          
+Compute cumulative sums for a row or column. Cumulate prompts 
+for year zero value. Use for ending balance calculations.     
+50 ABSOLUTE   RESULT <-- ABS(row/col)                         
+If a value is negative, the result is positive. If the value  
+is positive, the result is positive.                          
+51 ADD K      RESULT <-- row/col + value                      
+Add a constant amount to a row or column.                     
+                                                              
+52 SUB K      RESULT <-- row/col - value                      
+Subtract a constant amount from a row or column.              
+                                                              
+53 MULT K     RESULT <-- row/col * value                      
+Multiply a row or column by a constant amount.                
+                                                              
+54 DIV K      RESULT <-- row/col / value                      
+Divide a row or column by a constant amount.                  
+                                                              
+55 SUM        RESULT <-- SUM( row/col1 THROUGH row/col2 )     
+Sum a group of rows or a group of columns.                    
+                                                              
+56 GET        RESULT <-- row/col                              
+Get the values from a row or column.                          
+                                                              
+57 FLOOR      RESULT <-- MAX(row/col, value)                  
+If row/col is less than value, then the RESULT is value.      
+Otherwise RESULT is row/col.                                  
+58 CEILING    RESULT <-- MIN(row/col, value)                  
+If row/col is greater than value, then the RESULT is value.   
+Otherwise RESULT is row/col.                                  
+60  finance:                                                  
+Display finance commands. Depreciation, mortgages, internal   
+rate of return, ratios, percentages, growth and tax schedules.
+61 SET DEPR   RESULT <-- method amount salvage life           
+Prompt for inputs for the depreciation command. Straight line,
+sum of years, double declining and switch over is supported.  
+62 DEPRECIATE RESULT <-- DEPR(row/col)                        
+Calculate period by period depreciation schedule using the    
+parameters stored in row/col. See SET DEPR                    
+63 SET LOAN   RESULT <-- period PV  FW  N  R  PMT             
+Mortgage loan analysis. Supports annual,quarterly,monthly.    
+Given 4 values, SET LOAN solves for the fifth parameter.      
+64 LOAN       RESULT <-- LOAN(row/col)                        
+Calculate the interest schedule on a loan using the parameters
+stored in row/col. See SET LOAN                               
+65 DCF        RESULT <-- row/col / (1 + rate/100)^t           
+Discount cashflows in row/col by rate. The first period is not
+discounted. Use CUMULATE to calculate net discounted cashflow.
+66 IRR        RESULT <-- IRR(row/col)                         
+Calculate internal rate of return for row/col.                
+                                                              
+67 RATIO      RESULT <-- row/col1 / row/col2 * 100            
+Calculate percentage ratios.                                  
+                                                              
+68 % OF TOT   RESULT <-- row/col / value * 100                
+Calculate row/col as a percentage of value.                   
+                                                              
+70 PCT        RESULT <-- row/col1 / 100 * row/col2            
+Take percentages. The percentages in row/col1 are applied to  
+the values in row/col2.                                       
+71 K PCT      RESULT <-- rate / 100 * row/col                 
+Take constant percentages. The values in row/col are          
+multiplied by rate.                                           
+72 LAG        RESULT(t) <-- row/col(t-period)                 
+Shift row/col backwards by period. Use for cashflow calcs.    
+(e.g. receipts is a lag function of posted orders.)           
+73 LEAD       RESULT(t) <-- row/col(t+period)                 
+Shift row/col forward by period. Use for cashflow calculations
+(e.g. inventory is a function of expected sales.)             
+74 GROW       RESULT(t) <-- RESULT(t-1) * (1+row/col(t) / 100)
+Grow values using growth rates in row/col. GROW prompts for a 
+year zero value, if needed.                                   
+75 SAVINGS    RESULT(t) <-- RESULT(t-1)*rate/100 + row/col(t) 
+Calculate savings balances. Rate is the compounding rate for  
+savings and row/col contains period by period cashflows.      
+76 SET SCHED  RESULT <--  bracket  tax-rate  ...              
+Prompts for tax computation schedule. Inputs are a series of  
+tax bracket limits and the marginal tax rates.                
+77 DO TAX     RESULT <-- TAX(row1, row2)                      
+Calculate taxes using the tax schedule stored in row1 and the 
+pre tax figures stored in row2. (see SET SCHED)               
+80  print:                                                    
+Display print commands. Set report options, titles and print  
+reports. Resports can be sent to disk files.                  
+81 OPTIONS    option ...                                      
+Global report options. Row title width, column width, number  
+of columns, negative numbers, commas, line numbers, zeros, etc
+82 TITLES     page date row-range col-range 3-line-title      
+Set page number, dates, row and column ranges and a 3 line    
+title. A report will follow.                                  
+83 REPORT                                                     
+Print report on your printer.  Report options, title should be
+set prior to printing report.                                 
+84 SHOW OPTS                                                  
+Display report options and title information.                 
+                                                              
+85 SAVE REP   filename                                        
+Print report to a disk file. Interface with word processors,  
+or spool output to printer.                                   
+86 SET CRT    row-width  col-width  decimal-places            
+Set display parameters. You can control the row title area,   
+the column widths, and the number of decimal places.          
+90 status:                                                    
+Display status commands. Range settings, mode selection, and  
+selection of compute order.                                   
+91  range:                                                    
+Range selection commands for rows and columns.                
+                                                              
+92 ROW RANGE  row1 TO row2                                    
+Set row range on status line (top line). Impacts calculations,
+printed reports, and general data manipulation.               
+93 COL RANGE  row1 TO row2                                    
+Set column range on status line (top line). Impacts           
+calculations, printed reports and general data manipulation.  
+95  mode:                                                     
+Mode selection commands. (top line)                           
+                                                              
+96 RUN PGM                                                    
+Set mode to run program. The current program will start       
+execution.                                                    
+97 PROGRAM    step                                            
+Set mode to program mode. Each future command will automatical
+be memorized as a step of a program. Can also insert commands.
+98 COMPUTE                                                    
+Set mode to compute. Re-compute your table to update for any  
+changes in the data.                                          
+99 NORMAL                                                     
+Set mode to normal mode. Any computation command will still be
+memorized as part of your table.                              
+100 DEL STEP  step1 TO step2                                  
+Delete steps from programs.                                   
+                                                              
+101 PROTECT                                                   
+Toggles the protect mode on & off.  In protect mode, data can 
+be changed, but the model logic will not change.              
+102 ORDER     option                                          
+Set the computing order for your table. Select ROW/ONLY,      
+COL/ONLY, ROW/COL or COL/ROW.                                 
+105 utility:                                                  
+Display utility commands. Load, save, list, print, erase,     
+clear and reset tables. Also redisplay screen.                
+106 LOAD ALL  filename                                        
+Load table and program from diskettes and set to RUN PGM mode.
+On prompting for filename, the available files will be shown. 
+107 SAVE ALL  filename                                        
+Save table and program onto diskettes for permanent storage.  
+                                                              
+108 SET DRIVE drive                                           
+Select drive for saving and loading your files. Normally, the 
+current drive is used for saving and loading files.           
+109 SET UP    number-of-columns  number-of-rows               
+Redimension tables to a different number of rows and columns. 
+Generally, each table can have up to about 1000 entries.      
+111 LOAD TBL  filename                                        
+Load your table from your diskettes.  On prompting for file-  
+names, the available files will be shown.                     
+112 SAVE TBL  filename                                        
+Save your table on diskettes. The descriptions, data, logic,  
+and all print options will be saved as part of the file.      
+113 CLR DATA  verify                                          
+Clear all data in table range.  Row and column titles, and    
+table logic will be maintained.                               
+114 RESET     verify                                          
+Reset  table values, row and column titles, table logic,      
+program steps.                                                
+115 REDISPLAY                                                 
+Clear the screen and redisplays your table, menu and status   
+information. No data will be changed.                         
+116 LIST TBLS                                                 
+Print  a list of the tables you have on your current diskette.
+Listing will go to the printer.                               
+117 ERASE TBL filename                                        
+Erase a table from your current diskette.                     
+                                                              
+118 PRINT TBL                                                 
+Print  a description of your model. Listing will include row  
+titles, options, table commands and global options.           
+120 program:                                                  
+Display program utility commands. Load, save, clear, list and 
+print program files.                                          
+121 LOAD PGM  filename                                        
+Load program from your diskettes into the computer.           
+                                                              
+122 SAVE PGM  filename                                        
+Save program onto diskettes for permanent storage.            
+                                                              
+123 PRINT PGM                                                 
+Print a copy of the current program on the printer.           
+                                                              
+124 CLEAR PGM verify                                          
+Clear the current program from the computer.                  
+                                                              
+125 SHOW PGM                                                  
+Display the current program on your screen.                   
+                                                              
+126 LIST PGMS                                                 
+Print a list of the available programs on your diskettes.     
+The list will go to the printer.                              
+127 ERASE PGM filename                                        
+Erase a program on your diskette.                             
+                                                              
+130  stats:                                                   
+Display statistical commands. Smoothing, moving averages, mean
+variance, standard deviations and curve fitting.              
+131 DELTA     RESULT(t) <-- row/col(t) - row/col(t-period)    
+Calculate the change in value between periods of a row or col.
+                                                              
+132 % GROWTH  RESULT(t) <-- PCT(row/col, period)              
+Calculate the % rate of growth in values between periods of a 
+row or column.                                                
+133 MOV AVG   RESULT(t) <-- (row/col(t)+row/col(t-1)+...)/per 
+Compute the moving average for a row or column. The average is
+calculated over a variable number of periods.                 
+134 SMOOTH    RESULT(t) <-- f* RESULT(t-1) + (1-f)*row/col(t) 
+Compute exponential smoothing for a row or column. The f is an
+smoothing coefficient entered as a percentage.                
+135 MEAN      RESULT <-- MEAN(row/col1 THROUGH row/col2)      
+Calculate the mean values for a series of rows or columns.    
+Mean values are calculated row by row or column by column.    
+136 SIGMA     RESULT <-- SIGMA(row/col1 THROUGH row/col2)     
+Compute the standard deviation for a series of rows or columns
+                                                              
+137 VARIANCE  RESULT <-- VARIANCE(row/col1 THROUGH row/col2)  
+Compute the variances for a series of rows or columns.        
+                                                              
+138 LOG       RESULT <-- LOG(row/col)                         
+Compute the natural logarithm for a row or column.            
+                                                              
+139 EXP       RESULT <-- EXP(row/col)                         
+Calculate the exponents for a row or column.                  
+                                                              
+140 POWER     RESULT <-- row/col1 ^ row/col2                  
+Raise values in row/col1 to the power of the values in        
+row/col2.                                                     
+141 MAX       RESULT <-- MAX(row/col1 THROUGH row/col2)       
+Find the largest value in a series of rows or columns. Result 
+is the largest value in the range.                            
+142 MIN       RESULT <-- MIN(row/col1 THROUGH row/col2)       
+Find the smallest value in a series of rows or columns. Result
+is the smallest value in the range.                           
+143 COUNT     RESULT <-- COUNT(row/col1 THROUGH row/col2)     
+Count the number of values included in the mean, sigma and    
+variance calculations.                                        
+144 TOTAL     RESULT <-- SUM(row/col1 THROUGH row/col2)       
+Calculate the total of values for a series of rows or columns.
+Result is the same as SUM.                                    
+150 tables:                                                   
+Display external table access commands. Consolidations,       
+variance analysis, and commands to link tables or to G/L.     
+151 ADD       filename                                        
+Add  corresponding values from two tables. (e.g. consolidation
+of branch budgets to derive total sales department budget.)   
+152 SUBTRACT  filename                                        
+Subtract  corresponding values from two tables. (e.g. derive  
+the change between two scenarios.)                            
+153 MULT      filename                                        
+Multiply   corresponding values from two tables.              
+                                                              
+154 DIVIDE    filename                                        
+Divide  corresponding values from two tables.                 
+                                                              
+155 GET       RESULT <-- row/col OF filename                  
+Retrieve a row or column of data from a table on the diskette.
+                                                              
+157 CURRENT   RESULT <-- END OF filename                      
+Retrieve the current row or column from a table on the diskett
+Use with TBL ROWS and TBL COLS.                               
+158 Y-T-D     RESULT <-- SUM(BEGIN THROUGH END) OF filename   
+Sum rows or columns from a table on your diskette. Use with   
+TBL ROWS and TBL COLS.                                        
+159 MERGE     filename   (NOT AVAILABLE IN V3.0)              
+Perform row by row consolidation by matching row titles. If   
+titles match, the values are added to the values in the curren
+161 TBL ROWS  row1 THROUGH row2                               
+Set the row range for all TABLES commands.                    
+                                                              
+162 TBL COLS  col1 THROUGH col2                               
+  = "                         "
+	EXPLAIN (13,7)  = "                         "
+	EXPLAIN (13,8)  = "                         "
+	EXPLAIN (13,9)  = "                         "
+	EXPLAIN (13,10) = "                         "
+	EXPLAIN (13,11) = "                         "
+	EXPLAIN (13,12) = "                         "
+	EXPLAIN (13,13) = "                         "
+	EXPLAIN (13,14) = "                         "
+
+	EXPLAIN (14,1)  = "                         "
+	EXPLAIN (14,2)  = "                         "
+	EXPLAIN (14,3)  = "                         "
+	EXPLAIN (14,4)  = "                         "
+	EXPLAIN (14,5)  = "                         "
+	EXPLAIN (14,6)  = "                         "
+	EXPLAIN (14,7)  = "                         "
+	EXPLAIN (14,8)  = "                         "
+	EXPLAIN (14,9)  = "                         "
+	EXPLAIN (14,10) = "                         "
+	EXPLAIN (14,11) = "                         "
+	EXPLAIN (14,12) = "                         "
+	EXPLAIN (14,13) = "                                      "
+	EXPLAIN (13,7)  = "                         "
+	EXPLAIN (13,8)  = "                         

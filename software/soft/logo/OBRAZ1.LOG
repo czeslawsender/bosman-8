@@ -1,0 +1,32 @@
+oto obrazy
+sû sklej pw 90 np 672
+wrïã pw 90 np 150 lw 90 np 4 ws 8 np 4 lw 62
+powtïrz 224 [pod np 169.9 opu np 0.1 pod ws 170 lw 0.25] pw 28
+opu np 75 pw 90 np 3 ws 6 np 3 lw 90 np 150
+pw 90 np 3 ws 6 np 3 lw 90 np 75 pw 90
+np 4 ws 8 np 4 pw 118 powtïrz 224 [pod np 169.9 opu np 0.1 pod ws 170 lw 0.25]
+pw 28
+np 150 pw 90 ws 85
+powtïrz 8 [opu np 10 pod np 10] opu np 10 pod wrïã opu
+juû
+oto dane
+kursor [0 20] wpisz [Podaj ogniskowá soczewki: f =]
+przyp "f cl kursor [31 20] wpisz :f
+kursor [0 21] wpisz [Podaj odlegìoóã przedmiotu od soczewki: x =]
+przyp "x cl kursor [45 21] wpisz :x
+juû
+oto obraz1
+gr cs
+obrazy
+kursor [0 0] wpisz [x - przedmiot]
+kursor [0 1] wpisz [y - obraz]
+kursor [55 15] wpisz [obraz y jest:]
+kursor [55 16] wpisz [-rzeczywisty]
+kursor [55 17] wpisz [-odwrïcony]
+dane
+juû
+przypisz "x [76]
+przypisz "f [56]
+y]
+ np 25
+np 3 ws 6 np 3 lw 90 np 
