@@ -9,7 +9,7 @@
 * Dodane pliki ROMów Bosmanów, AN i ANG
 * Dodany schemat repliki Bosmana pobrany ze strony [wiki portalu speccy.pl](http://speccy.pl/wiki/index.php?title=Unimor_Bosman_8)
 
-2024-05-31 (krap/fhkd.pl)
+# 2024-05-31 (krap/fhkd.pl)
 
 * Porządki w strukturze katalogów
 * Dodane zdjęcia:
@@ -36,9 +36,30 @@
   * Trochę linków
 * Rozszerzone README.md
 
-2024-05-31 (krap/fhkd.pl)
+# 2024-05-31 (krap/fhkd.pl)
 
 * Dodane zdjęcia AN-2000 produkowanego przez MATEX (Marcin Kaźmierczak/Polskie Komputery)
+
+# 2026-04-10 (krap/fhkd.pl)
+
+* Dodane zdjęcia z FOReVER 2026
+* Dodane obrazy z oprogramowaniem:
+   * UTIL (formatery, edytor, test ram, turbo pascal, unerase)
+   * GRY COM (catchum, block, ladder, sokoban, szachy)
+   * GRY PASCAL (lunar lander, reversi, gomoku, robak)
+   * GRY BASIC (bridge, tysiac)
+   * TALE OF THE ANCIENT LAND
+
+# 2026-08-01 (tapiau)
+
+* Dodane zdjecia manuala ANC-4512
+* Dodane oprogramowanie z epoki w duzej ilosci (algol-m, asm, basic, c, dbase, forth, gry, komplet, logo, multiplan, turbo pascal, word star).
+* Dodany FSRV (komunikacja Bosman-PC po V.24)
+
+# 2026-08-01 (krap/fhkd.pl)
+
+* Dodane zrzuty PROMow ANG-3001
+* Dodany opis modyfikacji Bosman 8 (EPROM 32k)
 
 
 
